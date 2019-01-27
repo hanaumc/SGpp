@@ -1,0 +1,19 @@
+branches:
+  only:
+  - travis-ci
+
+language: cpp
+
+dist: xenial
+
+addons:
+  apt:
+    update: true
+    packages:
+      - libboost-test-dev
+      - python-numpy
+      - scons
+      - swig
+
+script:
+  - scons -j 2
