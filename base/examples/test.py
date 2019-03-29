@@ -4,6 +4,7 @@ import math
 import sys
 import numpy as np
 import matplotlib as plt
+from array import array
 
 
 ## Before starting, the function \f$f\f$, which we want to interpolate, is defined.
@@ -53,14 +54,67 @@ for i in range(gridStorage.getSize()):
   gp = gridStorage.getPoint(i)
   alpha[i] = f(gp.getStandardCoordinate(0))
 
-print("alpha before hierarchization: {}".format(alpha))
+print("alpha: {}".format(alpha))
 
 coeffs = pysgpp.DataVector(len(alpha))
-print("coeffs: {}".format(coeffs))
+print("coeffs before SLE: {}".format(coeffs))
 
-#hierSLE = pysgpp.OptHierarchisationSLE(grid)
-#sleSolver = pysgpp.OptAutoSLESolver()
+hierSLE = pysgpp.OptHierarchisationSLE(grid)
+sleSolver = pysgpp.OptAutoSLESolver()
 
+# solve linear system
+if not sleSolver.solve(hierSLE, alpha, coeffs):
+    print("Solving failed, exiting.")
+    sys.exit(1)
+
+# ergebnis
+print("coeffs solved: {}".format(coeffs))
+
+#print("alpha: {}".format(alpha))
+
+ft = pysgpp.OptInterpolantScalarFunction(grid, coeffs) #interpolierte funktion
+
+x0 = pysgpp.DataVector(alpha.getSize(),0.0)
+
+# Gitterpunkte sind 1/2; 1/4, 3/4; 1/8, 3/8, 5/8, 7/8 (erstes;zweites;drittes Gritter)
+for i in range(gridStorage.getSize()):
+  gp = gridStorage.getPoint(i)
+  x0[i] = gp.getStandardCoordinate(0) #Auswertungspunkte
+    
+print("Gitterpunkte: {}".format(x0))
+
+evalPoint = pysgpp.DataVector(1,0.0)
+evalPoint[0] = x0[0]
+print(evalPoint)
+ft.eval(evalPoint) #auswerten an Vektor!! nicht an Punkt
+print(ft.eval(evalPoint))
+
+#print("ft1={}".format(ft.eval(x0[1])))
+
+
+#for i in range (0,len(alpha)):
+ #   x0[i]=gridStorage.getCoordinates(gridStorage.getPoint(i))
+  #  print(x0)
+    
+#x0 = gridStorage.getCoordinates(gridStorage.getPoint(0));
+#print(x0)
+#x1 = gridStorage.getCoordinates(gridStorage.getPoint(1));
+#print(x1)
+#x2 = gridStorage.getCoordinates(gridStorage.getPoint(2));
+#print(x2)
+#x3 = gridStorage.getCoordinates(gridStorage.getPoint(3));
+#print(x3)
+
+
+
+#for i in range(0,len(alpha)):
+ #   print("alpha: {}".format(alpha[i]))
+  #  print(f(coeffs[i]))
+    
+
+
+
+# print(alpha[0])
 
 
 

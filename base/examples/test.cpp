@@ -37,7 +37,9 @@ int main() {
    */
   size_t dim = 1;
   size_t degree = 2;
+  // sgpp::base::WEBsplineGrid grid(dim, degree);
   std::unique_ptr<sgpp::base::Grid> grid(sgpp::base::Grid::createWEBsplineGrid(dim, degree));
+  // ist pointer
 
 
   /**
@@ -46,7 +48,7 @@ int main() {
    * points, to obtain the dimensionality (which we print) and the
    * number of grid points.
    */
-  sgpp::base::GridStorage& gridStorage = grid->getStorage();
+  sgpp::base::GridStorage& gridStorage = grid->getStorage();  // grid.getStorage wenn kein pointer
   std::cout << "dimensionality:         " << gridStorage.getDimension() << std::endl;
 
   /**
@@ -56,7 +58,7 @@ int main() {
    * of a two-dimensional regular sparse grid of level 3.
    */
   size_t level = 3;
-  grid->getGenerator().regular(level);
+  grid->getGenerator().regular(level);  // grid.getGenerator().regual(level); wenn kein pointer
   std::cout << "number of grid points:  " << gridStorage.getSize() << std::endl;
 
   //-----------------------------------------------------------------------------------------------
@@ -102,9 +104,17 @@ int main() {
     sgpp::base::DataVector coeffs(alpha.getSize());
     std::cout << "coeffs: " << coeffs.toString() << std::endl;
 
-    // Ab hier Fehler
-    // sgpp::optimization::HierarchisationSLE hierSLE(grid);
-    // sgpp::optimization::sle_solver::Auto sleSolver;
+//    sgpp::optimization::HierarchisationSLE hierSLE(*grid);
+//    sgpp::optimization::sle_solver::Auto sleSolver;
+//
+//
+//     // solve linear system, lösen von gleichungssystem. ausgabe hinzufügen
+//      if (!sleSolver.solve(hierSLE, alpha, coeffs)) {
+//         std::cout << "Solving failed, exiting.\n";
+//          return 1;
+//     }
+//
+//     sgpp::optimization::InterpolantScalarFunction ft(*grid, coeffs);  // function erstellen
 }
 
 
