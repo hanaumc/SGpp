@@ -56,7 +56,8 @@ enum class GridType {
   LinearClenshawCurtis,          // 28
   ModPolyClenshawCurtis,         // 29
   ModLinearClenshawCurtis,       // 30
-  NakBsplineBoundaryCombigrid    // 31
+  NakBsplineBoundaryCombigrid,   // 31
+  WEBspline						 // 32
 };
 
 /**
@@ -662,6 +663,24 @@ class Grid {
     * @return grid
     */
   static Grid* createNakBsplineBoundaryCombigridGrid(size_t dim, size_t degree);
+
+  /**
+   * creates a WEB-spline grid
+   *
+   * <table border="0"><tr>
+   * <td><div class="image">
+   * <img src="createBsplineGrid_C2,_3J-small.png" height="200px"/>
+   * <div class="caption">Level 4 sparse grid</div></div></td>
+   * <td><div class="image">
+   * <img src="hiba_createBsplineGrid_C2,_3J-small.png" height="200px"/>
+   * <div class="caption">Hierarchical basis functions up to level 3</div></div></td>
+   * </tr></table>
+   *
+   * @param dim the grid's dimension
+   * @param degree the B-spline degree
+   * @return grid
+   */
+  static Grid* createWEBsplineGrid(size_t dim, size_t degree);
 
   /**
    * reads a grid out of a string

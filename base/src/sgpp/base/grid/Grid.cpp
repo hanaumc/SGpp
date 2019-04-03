@@ -10,6 +10,7 @@
 #include <sgpp/base/grid/type/BsplineBoundaryGrid.hpp>
 #include <sgpp/base/grid/type/BsplineClenshawCurtisGrid.hpp>
 #include <sgpp/base/grid/type/BsplineGrid.hpp>
+#include <sgpp/base/grid/type/WEBsplineGrid.hpp>
 #include <sgpp/base/grid/type/FundamentalSplineGrid.hpp>
 #include <sgpp/base/grid/type/LinearClenshawCurtisGrid.hpp>
 #include <sgpp/base/grid/type/LinearClenshawCurtisBoundaryGrid.hpp>
@@ -114,6 +115,10 @@ Grid* Grid::createModWaveletGrid(size_t dim) { return new ModWaveletGrid(dim); }
 
 Grid* Grid::createBsplineGrid(size_t dim, size_t degree) { return new BsplineGrid(dim, degree); }
 
+Grid* Grid::createWEBsplineGrid(size_t dim, size_t degree) {
+  return new WEBsplineGrid(dim, degree);
+}
+
 Grid* Grid::createBsplineBoundaryGrid(size_t dim, size_t degree) {
   return new BsplineBoundaryGrid(dim, degree);
 }
@@ -208,6 +213,8 @@ Grid* Grid::createGrid(RegularGridConfiguration gridConfig) {
         return Grid::createModLinearClenshawCurtisGrid(gridConfig.dim_);
       case GridType::Bspline:
         return Grid::createBsplineGrid(gridConfig.dim_, gridConfig.maxDegree_);
+      case GridType::WEBspline:
+        return Grid::createWEBsplineGrid(gridConfig.dim_, gridConfig.maxDegree_);
       case GridType::BsplineBoundary:
         return Grid::createBsplineBoundaryGrid(gridConfig.dim_, gridConfig.maxDegree_);
       case GridType::BsplineClenshawCurtis:
@@ -307,6 +314,9 @@ Grid* Grid::createGridOfEquivalentType(size_t numDims) {
     case GridType::Bspline:
       degree = dynamic_cast<BsplineGrid*>(this)->getDegree();
       newGrid = Grid::createBsplineGrid(numDims, degree);
+    case GridType::WEBspline:
+      degree = dynamic_cast<WEBsplineGrid*>(this)->getDegree();
+      newGrid = Grid::createWEBsplineGrid(numDims, degree);
       break;
     case GridType::BsplineBoundary:
       degree = dynamic_cast<BsplineBoundaryGrid*>(this)->getDegree();
@@ -398,6 +408,8 @@ GridType Grid::getZeroBoundaryType() {
     case GridType::BsplineBoundary:
     case GridType::ModBspline:
       return GridType::Bspline;
+    case GridType::WEBspline:
+      return GridType::WEBspline;
     case GridType::Prewavelet:
       return GridType::Prewavelet;
     case GridType::LinearClenshawCurtis:
@@ -498,6 +510,7 @@ std::map<std::string, Grid::Factory>& Grid::typeMap() {
         std::pair<std::string, Grid::Factory>("waveletBoundary", WaveletBoundaryGrid::unserialize));
     tMap->insert(std::pair<std::string, Grid::Factory>("modWavelet", ModWaveletGrid::unserialize));
     tMap->insert(std::pair<std::string, Grid::Factory>("bspline", BsplineGrid::unserialize));
+    tMap->insert(std::pair<std::string, Grid::Factory>("webspline", WEBsplineGrid::unserialize));
     tMap->insert(
         std::pair<std::string, Grid::Factory>("bsplineBoundary", BsplineBoundaryGrid::unserialize));
     tMap->insert(std::pair<std::string, Grid::Factory>("bsplineClenshawCurtis",
@@ -539,6 +552,7 @@ std::map<std::string, Grid::Factory>& Grid::typeMap() {
     tMap->insert(std::make_pair("waveletBoundary", WaveletBoundaryGrid::unserialize));
     tMap->insert(std::make_pair("modWavelet", ModWaveletGrid::unserialize));
     tMap->insert(std::make_pair("bspline", BsplineGrid::unserialize));
+    tMap->insert(std::make_pair("webspline", WEBsplineGrid::unserialize));
     tMap->insert(std::make_pair("bsplineBoundary", BsplineBoundaryGrid::unserialize));
     tMap->insert(std::make_pair("bsplineClenshawCurtis", BsplineClenshawCurtisGrid::unserialize));
     tMap->insert(std::make_pair("modBspline", ModBsplineGrid::unserialize));
@@ -603,6 +617,8 @@ std::map<sgpp::base::GridType, std::string>& Grid::typeVerboseMap() {
         std::pair<sgpp::base::GridType, std::string>(GridType::ModWavelet, "modWavelet"));
     verboseMap->insert(std::pair<sgpp::base::GridType, std::string>(GridType::Bspline, "bspline"));
     verboseMap->insert(
+        std::pair<sgpp::base::GridType, std::string>(GridType::WEBspline, "webspline"));
+    verboseMap->insert(
         std::pair<sgpp::base::GridType, std::string>(GridType::BsplineBoundary, "bsplineBoundary"));
     verboseMap->insert(std::pair<sgpp::base::GridType, std::string>(GridType::BsplineClenshawCurtis,
                                                                     "bsplineClenshawCurtis"));
@@ -642,6 +658,7 @@ std::map<sgpp::base::GridType, std::string>& Grid::typeVerboseMap() {
     verboseMap->insert(std::make_pair(GridType::WaveletBoundary, "waveletBoundary"));
     verboseMap->insert(std::make_pair(GridType::ModWavelet, "modWavelet"));
     verboseMap->insert(std::make_pair(GridType::Bspline, "bspline"));
+    verboseMap->insert(std::make_pair(GridType::WEBspline, "webspline"));
     verboseMap->insert(std::make_pair(GridType::BsplineBoundary, "bsplineBoundary"));
     verboseMap->insert(std::make_pair(GridType::BsplineClenshawCurtis, "bsplineClenshawCurtis"));
     verboseMap->insert(std::make_pair(GridType::ModBspline, "modBspline"));
@@ -795,6 +812,8 @@ GridType Grid::stringToGridType(const std::string& gridType) {
     return sgpp::base::GridType::LinearClenshawCurtisBoundary;
   } else if (gridType.compare("bspline") == 0) {
     return sgpp::base::GridType::Bspline;
+  } else if (gridType.compare("webspline") == 0) {
+    return sgpp::base::GridType::WEBspline;
   } else if (gridType.compare("bsplineBoundary") == 0) {
     return sgpp::base::GridType::BsplineBoundary;
   } else if (gridType.compare("bsplineClenshawCurtis") == 0) {

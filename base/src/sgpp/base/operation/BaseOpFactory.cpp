@@ -10,6 +10,7 @@
 #include <sgpp/base/grid/type/BsplineBoundaryGrid.hpp>
 #include <sgpp/base/grid/type/BsplineClenshawCurtisGrid.hpp>
 #include <sgpp/base/grid/type/BsplineGrid.hpp>
+#include <sgpp/base/grid/type/WEBsplineGrid.hpp>
 #include <sgpp/base/grid/type/FundamentalSplineGrid.hpp>
 #include <sgpp/base/grid/type/ModBsplineClenshawCurtisGrid.hpp>
 #include <sgpp/base/grid/type/ModBsplineGrid.hpp>
@@ -144,6 +145,7 @@
 #include <sgpp/base/operation/hash/OperationEvalBsplineBoundaryNaive.hpp>
 #include <sgpp/base/operation/hash/OperationEvalBsplineClenshawCurtisNaive.hpp>
 #include <sgpp/base/operation/hash/OperationEvalBsplineNaive.hpp>
+#include <sgpp/base/operation/hash/OperationEvalWEBsplineNaive.hpp>
 #include <sgpp/base/operation/hash/OperationEvalFundamentalSplineNaive.hpp>
 #include <sgpp/base/operation/hash/OperationEvalLinearBoundaryNaive.hpp>
 #include <sgpp/base/operation/hash/OperationEvalLinearClenshawCurtisNaive.hpp>
@@ -573,6 +575,9 @@ base::OperationEval* createOperationEvalNaive(base::Grid& grid) {
   } else if (grid.getType() == base::GridType::Bspline) {
     return new base::OperationEvalBsplineNaive(grid.getStorage(),
                                                dynamic_cast<base::BsplineGrid&>(grid).getDegree());
+  } else if (grid.getType() == base::GridType::WEBspline) {
+    return new base::OperationEvalWEBsplineNaive(
+        grid.getStorage(), dynamic_cast<base::WEBsplineGrid&>(grid).getDegree());
   } else if (grid.getType() == base::GridType::ModBspline) {
     return new base::OperationEvalModBsplineNaive(
         grid.getStorage(), dynamic_cast<base::ModBsplineGrid&>(grid).getDegree());

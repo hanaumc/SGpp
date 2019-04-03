@@ -112,6 +112,7 @@ int main() {
    * \c getStandardCoordinate(dim).
    * The current coefficient vector is then printed.
    */
+  //Diese schleife anstelle von   sgpp::base::DataVector functionValues(gridGen.getFunctionValues()); in optimization.cpp
   for (size_t i = 0; i < gridStorage.getSize(); i++) {
     sgpp::base::GridPoint& gp = gridStorage.getPoint(i);
     alpha[i] = f(gp.getStandardCoordinate(0), gp.getStandardCoordinate(1));

@@ -186,6 +186,13 @@ int main() {
   grid->getGenerator().regular(level);
 
   /**
+     * WEBsplineGrid
+     * @image html "createBsplineGrid_C2,_3J-small.png" ""
+     */
+    grid = sgpp::base::Grid::createWEBsplineGrid(dim, polyDegree);
+    grid->getGenerator().regular(level);
+
+  /**
    * BsplineClenshawCurtisGrid
    * @image html "createBsplineClenshawCurtisGrid_C2,_3J-small.png" ""
    */

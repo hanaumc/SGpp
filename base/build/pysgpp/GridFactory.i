@@ -28,6 +28,7 @@
 %newobject sgpp::base::Grid::createWaveletBoundaryGrid(size_t dim);
 %newobject sgpp::base::Grid::createModWaveletGrid(size_t dim);
 %newobject sgpp::base::Grid::createBsplineGrid(size_t dim, size_t degree);
+%newobject sgpp::base::Grid::createWEBsplineGrid(size_t dim, size_t degree);
 %newobject sgpp::base::Grid::createBsplineBoundaryGrid(size_t dim, size_t degree);
 %newobject sgpp::base::Grid::createBsplineClenshawCurtisGrid(size_t dim, size_t degree);
 %newobject sgpp::base::Grid::createModBsplineGrid(size_t dim, size_t degree);
@@ -121,7 +122,8 @@ enum class GridType {
   LinearClenshawCurtis,         // 28
   ModPolyClenshawCurtis,        // 29
   ModLinearClenshawCurtis,      // 30
-  NakBsplineBoundaryCombigrid   // 31
+  NakBsplineBoundaryCombigrid,  // 31
+  WEBspline						// 32
 };
 
 class Grid
@@ -159,6 +161,7 @@ public:
   static Grid* createPolyClenshawCurtisGrid(size_t dim, size_t degree);
   static Grid* createModPolyClenshawCurtisGrid(size_t dim, size_t degree);
   static Grid* createNakBsplineBoundaryCombigridGrid(size_t dim, size_t degree);
+  static Grid* createWEBsplineGrid(size_t dim, size_t degree);
 
   static Grid* unserialize(const std::string& istr);
 

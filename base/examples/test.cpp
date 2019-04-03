@@ -116,5 +116,3 @@ int main() {
 //
 //     sgpp::optimization::InterpolantScalarFunction ft(*grid, coeffs);  // function erstellen
 }
-
-

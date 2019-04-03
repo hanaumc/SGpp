@@ -148,18 +148,24 @@ for i in range(gridStorage.getSize()):
 print("b = {}".format(b))
 print("a = {}".format(a))
 
-# calculate difference a-b
+# calculate difference a-b 
 diff = pysgpp.DataVector(a.getSize(),0.0)
 for i in range(len(a)):
     diff[i] = a[i]-b[i]
+print(diff)
     
-l2 = [3, 4]
-print(l2)
-print(LA.norm(l2, 2))
-#print(diff)
+a.sub(b) # Routinen auf DataVector.hpp verwenden!
+print(a)   
 
 
 # L2 Norm of difference
-error = LA.norm(diff, 2)
+#error = a.l2Norm() # Routinen aus DataVector.hpp verwenden!
+
+#pythonA = [1,2,3,4]
+#error = LA.norm(pythonA, 2)
+
+#TODO: Fehler an bel. vielen Punkten NACH Interpolation bestimmen
+#    Anschließend für höhere dim schreiben
+#    Level von SparseGrid erhöhen um zu optimieren
 
 

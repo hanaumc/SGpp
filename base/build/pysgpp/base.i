@@ -144,6 +144,7 @@ namespace std {
 %include "base/src/sgpp/base/application/ScreenOutput.hpp"
 
 %include "base/src/sgpp/base/operation/hash/common/basis/BsplineBasis.hpp"
+%include "base/src/sgpp/base/operation/hash/common/basis/WEBsplineBasis.hpp"
 %include "base/src/sgpp/base/operation/hash/common/basis/BsplineBoundaryBasis.hpp"
 %include "base/src/sgpp/base/operation/hash/common/basis/BsplineClenshawCurtisBasis.hpp"
 %include "base/src/sgpp/base/operation/hash/common/basis/BsplineModifiedBasis.hpp"
@@ -203,6 +204,7 @@ namespace std {
 %template(SWaveletBoundaryBase) sgpp::base::WaveletBoundaryBasis<unsigned int, unsigned int>;
 %template(SWaveletModifiedBase) sgpp::base::WaveletModifiedBasis<unsigned int, unsigned int>;
 %template(SBsplineBase) sgpp::base::BsplineBasis<unsigned int, unsigned int>;
+%template(SWEBsplineBase) sgpp::base::BsplineBasis<unsigned int, unsigned int>;
 %template(SBsplineBoundaryBase) sgpp::base::BsplineBoundaryBasis<unsigned int, unsigned int>;
 %template(SBsplineClenshawCurtisBase) sgpp::base::BsplineClenshawCurtisBasis<unsigned int, unsigned int>;
 %template(SBsplineModifiedBase) sgpp::base::BsplineModifiedBasis<unsigned int, unsigned int>;
