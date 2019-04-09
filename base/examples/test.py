@@ -34,37 +34,36 @@ for i in range(gridStorage.getSize()):
   alpha[i] = gp.getStandardCoordinate(0)
   beta[i] = gp.getStandardCoordinate(1)
 
-#print("alpha: {}".format(alpha))
-#print("beta: {}".format(beta))
-
 x = np.zeros((len(alpha),dim))
 eval_circle= np.zeros(len(alpha))
 for i in range(len(alpha)):
     x[i] = [alpha[i],beta[i]]    
     eval_circle[i]=weightfunction.circle(radius, x[i])
-print(x)
-print(x[:,0])
-print(eval_circle)
-#colors = np.random.rand(len(alpha))
-#area = (30 * np.random.rand(N))**2  # 0 to 15 point radii
-#plt.scatter(x, y, c=colors, alpha=0.5)
-#plt.show()
+
 
 printLine()
-p=0
-n=0
+p0=0
+n0=0
 for i in range(len(eval_circle)):
     if eval_circle[i] > 0:
-        p=p+1
-        print("pos")
+        p0=p0+1
     else:
-        n=n+1
-        print("neg")
-print(p)    
-print(n)
-    
+        n0=n0+1
+I_j = np.zeros((p0,dim))
+J_i = np.zeros((n0,dim))
+#print(pos)
+#print(neg)
+p1=0
+n1=0 
+for i in range(len(eval_circle)):
+    if eval_circle[i] > 0:
+        I_j[p1]=x[i]
+        p1=p1+1
+    else:
+        J_i[n1]=x[i]
+        n1=n1+1
 
-
-
-
+plt.scatter(I_j[:,0], I_j[:,1], c='red')
+plt.scatter(J_i[:,0], J_i[:,1], c='blue')
+plt.show()
 
