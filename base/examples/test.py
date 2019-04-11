@@ -17,11 +17,11 @@ degree = 3      # Grad von B-Splines
 level = 5       # Level von Sparse Grid
 
 # Gitter für Kreis erzeugen und auswerten
-x1 = np.linspace(0, 1, 50)
+x0 = np.linspace(0, 1, 50)
 if dim == 2:
-    X = np.meshgrid(x1, x1)
+    X = np.meshgrid(x0, x0)
 elif dim == 3:
-    X = np.meshgrid(x1, x1, x1)
+    X = np.meshgrid(x0, x0, x0)
       
 Z = weightfunction.circle(0.4,X)
 
@@ -93,7 +93,32 @@ elif dim == 3:
 
 # Bestimme Gitterweite h
 h = 2**(-level)
+print(J_all)
+print((degree-1)*h)
 
+# Bestimme Eckpunkte von Träger von Punkt (x,y)
+J_relevant = np.zeros(dim)
+print(J_relevant)
+if dim == 2:
+    for i in range(len(J_all)):
+        if weightfunction.circle(radius, J_all[i]-(degree-1)*h ) > 0 or weightfunction.circle(radius, [J_all[i,0]-(degree-1)*h, J_all[i,1]+(degree-1)*h]) > 0 or weightfunction.circle(radius, [J_all[i,0]+(degree-1)*h, J_all[i,1]-(degree-1)*h]) > 0 or weightfunction.circle(radius, J_all[i]+(degree-1)*h) > 0: 
+            J_relevant = np.vstack((J_relevant, J_all[i]))            
+J_relevant = np.delete(J_relevant, 0, 0)
+        
+        
+    
 
+print(J_relevant)
+print(len(J_relevant))
+if dim == 2:
+    #ax = plt.axes(projection='3d')
+    #ax.contour3D(X[0], X[1], Z, 50, cmap='binary')
+    plt.scatter(I_all[:,0], I_all[:,1], c='b')
+    plt.scatter(J_relevant[:,0], J_relevant[:,1], c='y')
+    plt.scatter(J_relevant[5,0], J_relevant[5,1], c='c')
+#plt.show()
+# Punkt 5 ist der links oben für den nearest neighbors getestet wird.
+
+pts = np.array([[0, 0], [2.1, 2.9], [5,3]])
 
 
