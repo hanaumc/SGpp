@@ -27,7 +27,7 @@ elif dim == 3:
 Z = weightfunction.circle(0.4,X)
 
 # Plot von Kreis
-#plt.contour(X[0], X[1], Z, colors='black');
+plt.contour(X[0], X[1], Z, colors='black');
 #plt.axis('equal')
 
 # Erzeugen von Gitter
@@ -164,10 +164,10 @@ else:
     NN = np.zeros((len(sort), dim))
     for i in range(len(sort)):
         NN[i] = I_all[int(sort[i,1])]
-    plt.scatter(I_all[:,0], I_all[:,1], c='b')
-    plt.scatter(J_relevant[:,0], J_relevant[:,1], c='y')
-    plt.scatter(J_relevant[5,0], J_relevant[5,1], c='c')
-    plt.scatter(NN[:,0], NN[:,1], c='m')
+    plt.scatter(I_all[:,0], I_all[:,1], c='b',s=50,lw=0)
+    plt.scatter(J_relevant[:,0], J_relevant[:,1], c='y',s=50,lw=0)
+    plt.scatter(J_relevant[5,0], J_relevant[5,1], c='c',s=50,lw=0)
+    plt.scatter(NN[:,0], NN[:,1], c='m',s=50,lw=0)
     plt.show()
 
 

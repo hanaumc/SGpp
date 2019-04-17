@@ -24,10 +24,10 @@ if dim == 2:
 elif dim == 3:
     X = np.meshgrid(x0, x0, x0)
       
-Z = weightfunction.circle(0.4,X)
+Z = weightfunction.circle(radius,X)
 
 # Plot von Kreis
-#plt.contour(X[0], X[1], Z, colors='black');
+plt.contour(X[0], X[1], Z, colors='black');
 #plt.axis('equal')
 
 # Erzeugen von Gitter
@@ -110,7 +110,7 @@ if dim == 2:
     #ax.contour3D(X[0], X[1], Z, 50, cmap='binary')
     plt.scatter(I_all[:,0], I_all[:,1], c='b')
     plt.scatter(J_relevant[:,0], J_relevant[:,1], c='y')
-plt.show()
+#plt.show()
 
 # Anzahl Neighbors
 n_neighbors = (degree+1)**dim
@@ -168,7 +168,7 @@ else:
     plt.scatter(J_relevant[:,0], J_relevant[:,1], c='y')
     plt.scatter(J_relevant[5,0], J_relevant[5,1], c='c')
     plt.scatter(NN[:,0], NN[:,1], c='m')
-    plt.show()
+#    plt.show()
 
 
 
