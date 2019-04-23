@@ -83,13 +83,13 @@ for i in range(len(eval_circle)):
 if dim == 2:
     #ax = plt.axes(projection='3d')
     #ax.contour3D(X[0], X[1], Z, 50, cmap='binary')
-    plt.scatter(I_all[:,0], I_all[:,1], c='b')
-    plt.scatter(J_all[:,0], J_all[:,1], c='r')
+    plt.scatter(I_all[:,0], I_all[:,1], c='mediumblue', s=50, lw=0)
+    plt.scatter(J_all[:,0], J_all[:,1], c='crimson', s=50, lw=0)
 elif dim == 3:
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
-    ax.scatter(I_all[:,0], I_all[:,1], I_all[:,2], c='red')
-    ax.scatter(J_all[:,0], J_all[:,1], J_all[:,2], c='blue')
+    ax.scatter(I_all[:,0], I_all[:,1], I_all[:,2], c='mediumblue', s=50, lw=0)
+    ax.scatter(J_all[:,0], J_all[:,1], J_all[:,2], c='crimson', s=50, lw=0)
 plt.show()
 
 # Bestimme Gitterweite h
@@ -108,8 +108,8 @@ J_relevant = np.delete(J_relevant, 0, 0)
 if dim == 2:
     #ax = plt.axes(projection='3d')
     #ax.contour3D(X[0], X[1], Z, 50, cmap='binary')
-    plt.scatter(I_all[:,0], I_all[:,1], c='b')
-    plt.scatter(J_relevant[:,0], J_relevant[:,1], c='y')
+    plt.scatter(I_all[:,0], I_all[:,1], c='mediumblue', s=50, lw=0)
+    plt.scatter(J_relevant[:,0], J_relevant[:,1], c='goldenrod', s=50, lw=0)
 plt.show()
 
 # Anzahl Neighbors
@@ -142,10 +142,10 @@ if k==1:
         for i in range(len(sort)):
             NN[i] = I_all[int(sort[i,1])]
 
-        plt.scatter(I_all[:,0], I_all[:,1], c='b')
-        plt.scatter(J_relevant[:,0], J_relevant[:,1], c='y')
-        plt.scatter(J_relevant[j,0], J_relevant[j,1], c='c') #(NN z.B. für Punkt 5)
-        plt.scatter(NN[:,0], NN[:,1], c='m')
+        plt.scatter(I_all[:,0], I_all[:,1], c='mediumblue')
+        plt.scatter(J_relevant[:,0], J_relevant[:,1], c='goldenrod')
+        plt.scatter(J_relevant[j,0], J_relevant[j,1], c='cyan') #(NN z.B. für Punkt 5)
+        plt.scatter(NN[:,0], NN[:,1], c='limegreen')
         plt.show()
 else:
     for i in range(len(I_all)):
@@ -164,10 +164,10 @@ else:
     NN = np.zeros((len(sort), dim))
     for i in range(len(sort)):
         NN[i] = I_all[int(sort[i,1])]
-    plt.scatter(I_all[:,0], I_all[:,1], c='b',s=50,lw=0)
-    plt.scatter(J_relevant[:,0], J_relevant[:,1], c='y',s=50,lw=0)
-    plt.scatter(J_relevant[5,0], J_relevant[5,1], c='c',s=50,lw=0)
-    plt.scatter(NN[:,0], NN[:,1], c='m',s=50,lw=0)
+    plt.scatter(I_all[:,0], I_all[:,1], c='mediumblue',s=50,lw=0)
+    plt.scatter(J_relevant[:,0], J_relevant[:,1], c='goldenrod',s=50,lw=0)
+    plt.scatter(J_relevant[5,0], J_relevant[5,1], c='cyan',s=50,lw=0)
+    plt.scatter(NN[:,0], NN[:,1], c='limegreen',s=50,lw=0)
     plt.show()
 
 
