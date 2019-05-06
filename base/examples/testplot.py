@@ -22,13 +22,13 @@ x0 = np.linspace(0, 1, 50)
 if dim == 2:
     X = np.meshgrid(x0, x0)
 elif dim == 3:
-    X = np.meshgrid(x0, x0, x0)
-      
-Z = weightfunction.circle(0.4,X)
+    X = np.meshgrid(x0, x0, x0)      
+Z = weightfunction.circle(radius,X)
 
 # Plot von Kreis
-plt.contour(X[0], X[1], Z, colors='black');
-#plt.axis('equal')
+plt.contour(X[0], X[1], Z, 0)
+plt.axis('equal')
+#plt.show()
 
 # Erzeugen von Gitter
 grid = pysgpp.Grid.createWEBsplineGrid(dim, degree)
@@ -90,6 +90,7 @@ elif dim == 3:
     ax = fig.add_subplot(111, projection='3d')
     ax.scatter(I_all[:,0], I_all[:,1], I_all[:,2], c='mediumblue', s=50, lw=0)
     ax.scatter(J_all[:,0], J_all[:,1], J_all[:,2], c='crimson', s=50, lw=0)
+plt.axis('equal')
 plt.show()
 
 # Bestimme Gitterweite h
@@ -110,6 +111,7 @@ if dim == 2:
     #ax.contour3D(X[0], X[1], Z, 50, cmap='binary')
     plt.scatter(I_all[:,0], I_all[:,1], c='mediumblue', s=50, lw=0)
     plt.scatter(J_relevant[:,0], J_relevant[:,1], c='goldenrod', s=50, lw=0)
+plt.axis('equal')
 plt.show()
 
 # Anzahl Neighbors
@@ -146,7 +148,6 @@ if k==1:
         plt.scatter(J_relevant[:,0], J_relevant[:,1], c='goldenrod')
         plt.scatter(J_relevant[j,0], J_relevant[j,1], c='cyan') #(NN z.B. für Punkt 5)
         plt.scatter(NN[:,0], NN[:,1], c='limegreen')
-        plt.show()
 else:
     for i in range(len(I_all)):
         diff[i] = I_all[i]-J_relevant[5]
@@ -168,7 +169,8 @@ else:
     plt.scatter(J_relevant[:,0], J_relevant[:,1], c='goldenrod',s=50,lw=0)
     plt.scatter(J_relevant[5,0], J_relevant[5,1], c='cyan',s=50,lw=0)
     plt.scatter(NN[:,0], NN[:,1], c='limegreen',s=50,lw=0)
-    plt.show()
-
+plt.axis('equal')
+plt.show()
+        
 
 

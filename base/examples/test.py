@@ -14,24 +14,20 @@ def printLine():
     
 dim = 2         # Dimension
 radius = 0.1    # Radius von Kreis
-degree = 3      # Grad von B-Splines
-level = 4       # Level von Sparse Grid
+degree = 2      # Grad von B-Splines
+level = 3       # Level von Sparse Grid
 
 # Gitter für Kreis erzeugen und auswerten
 x0 = np.linspace(0, 1, 50)
 if dim == 2:
     X = np.meshgrid(x0, x0)
 elif dim == 3:
-    X = np.meshgrid(x0, x0, x0)
-      
-Z = weightfunction.circle(0.4,X)
-
-
+    X = np.meshgrid(x0, x0, x0)      
+Z = weightfunction.circle(radius,X)
 
 # Plot von Kreis
-#plt.contour(X[0], X[1], Z, colors='black');
-#plt.axis('equal')
-#plt.Circle((0.5,0.5), radius= 0.1)
+plt.contour(X[0], X[1], Z, 0)
+plt.axis('equal')
 #plt.show()
 
 # Erzeugen von Gitter
@@ -76,13 +72,12 @@ for i in range(len(eval_circle)):
     else:
         J_all[n1]=x[i]
         n1=n1+1
-
+print('I = {}'.format(I_all))
+print('J = {}'.format(J_all))
+all = x[:,0]
+#all= np.vstack((I_all, J_all))
+print('all = {}'.format(all))
 # Plot von inneren und äußeren Punkten 
-#ax = plt.axes(projection='3d')
-#ax.contour3D(X[0], X[1], Z, 50, cmap='binary')
-#ax.set_xlabel('x')
-#ax.set_ylabel('y')
-#ax.set_zlabel('z');
 
 if dim == 2:
     #ax = plt.axes(projection='3d')
@@ -94,7 +89,8 @@ elif dim == 3:
     ax = fig.add_subplot(111, projection='3d')
     ax.scatter(I_all[:,0], I_all[:,1], I_all[:,2], c='mediumblue', s=50, lw=0)
     ax.scatter(J_all[:,0], J_all[:,1], J_all[:,2], c='crimson', s=50, lw=0)
-plt.show()
+plt.axis('equal')
+#plt.show()
 
 # Bestimme Gitterweite h
 h = 2**(-level)
@@ -114,7 +110,8 @@ if dim == 2:
     #ax.contour3D(X[0], X[1], Z, 50, cmap='binary')
     plt.scatter(I_all[:,0], I_all[:,1], c='mediumblue', s=50, lw=0)
     plt.scatter(J_relevant[:,0], J_relevant[:,1], c='goldenrod', s=50, lw=0)
-plt.show()
+plt.axis('equal')
+#plt.show()
 
 # Anzahl Neighbors
 n_neighbors = (degree+1)**dim
@@ -150,7 +147,6 @@ if k==1:
         plt.scatter(J_relevant[:,0], J_relevant[:,1], c='goldenrod')
         plt.scatter(J_relevant[j,0], J_relevant[j,1], c='cyan') #(NN z.B. für Punkt 5)
         plt.scatter(NN[:,0], NN[:,1], c='limegreen')
-        plt.show()
 else:
     for i in range(len(I_all)):
         diff[i] = I_all[i]-J_relevant[5]
@@ -172,7 +168,36 @@ else:
     plt.scatter(J_relevant[:,0], J_relevant[:,1], c='goldenrod',s=50,lw=0)
     plt.scatter(J_relevant[5,0], J_relevant[5,1], c='cyan',s=50,lw=0)
     plt.scatter(NN[:,0], NN[:,1], c='limegreen',s=50,lw=0)
-    plt.show()
+plt.axis('equal')
+#plt.show()
+        
+# Monome
 
 
+
+
+
+# Interpolation
+
+#eval = pysgpp.DataVector(gridStorage.getSize(),0.0)
+
+#print('bis hier ok')
+eval = pysgpp.DataVector(gridStorage.getSize(), 0.0)
+for i in range(gridStorage.getSize()):
+  gp = gridStorage.getPoint(i)
+  eval[i] = gp.getStandardCoordinate(0)
+print(eval)
+for i in range(len(eval)):
+    eval[i]=pow(eval[i], 2)
+print(eval)
+
+coeffs = pysgpp.DataVector(gridStorage.getSize(),0.0)
+hierSLE = pysgpp.OptHierarchisationSLE(grid)
+sleSolver = pysgpp.OptAutoSLESolver()
+if not sleSolver.solve(hierSLE, eval, coeffs):
+    print("Solving failed, exiting.")
+    sys.exit(1)
+
+# Result of SLE 
+print("coeffs solved: {}".format(coeffs))
 
