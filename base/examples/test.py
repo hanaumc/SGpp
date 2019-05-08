@@ -14,8 +14,8 @@ def printLine():
     
 dim = 2         # Dimension
 radius = 0.1    # Radius von Kreis
-degree = 2      # Grad von B-Splines
-level = 3       # Level von Sparse Grid
+degree = 3      # Grad von B-Splines
+level = 4       # Level von Sparse Grid
 
 # Gitter für Kreis erzeugen und auswerten
 x0 = np.linspace(0, 1, 50)
@@ -72,13 +72,8 @@ for i in range(len(eval_circle)):
     else:
         J_all[n1]=x[i]
         n1=n1+1
-print('I = {}'.format(I_all))
-print('J = {}'.format(J_all))
-all = x[:,0]
-#all= np.vstack((I_all, J_all))
-print('all = {}'.format(all))
-# Plot von inneren und äußeren Punkten 
 
+# Plot von inneren und äußeren Punkten 
 if dim == 2:
     #ax = plt.axes(projection='3d')
     #ax.contour3D(X[0], X[1], Z, 50, cmap='binary')
@@ -90,7 +85,7 @@ elif dim == 3:
     ax.scatter(I_all[:,0], I_all[:,1], I_all[:,2], c='mediumblue', s=50, lw=0)
     ax.scatter(J_all[:,0], J_all[:,1], J_all[:,2], c='crimson', s=50, lw=0)
 plt.axis('equal')
-#plt.show()
+plt.show()
 
 # Bestimme Gitterweite h
 h = 2**(-level)
@@ -111,9 +106,9 @@ if dim == 2:
     plt.scatter(I_all[:,0], I_all[:,1], c='mediumblue', s=50, lw=0)
     plt.scatter(J_relevant[:,0], J_relevant[:,1], c='goldenrod', s=50, lw=0)
 plt.axis('equal')
-#plt.show()
+plt.show()
 
-# Anzahl Neighbors
+# Anzahl Nearest Neighbors
 n_neighbors = (degree+1)**dim
 print("Anzahl Nearest Neighbors: {}".format(n_neighbors))
 
@@ -132,13 +127,13 @@ if k==1:
             distance[i,1] = i
             sort=distance[np.argsort(distance[:,0])]
 
-# Lösche Punkte die Anzahl NN überschreitet
+# Lösche Punkte die Anzahl Nearest Neighbor überschreitet
         i = len(I_all)-1
         while i >= n_neighbors:
             sort = np.delete(sort, i , 0)
             i = i-1
 
-# Bestimme die NN inneren Punkte 
+# Bestimme die Nearest Neighbor inneren Punkte 
         NN = np.zeros((len(sort), dim))
         for i in range(len(sort)):
             NN[i] = I_all[int(sort[i,1])]
@@ -149,55 +144,65 @@ if k==1:
         plt.scatter(NN[:,0], NN[:,1], c='limegreen')
 else:
     for i in range(len(I_all)):
-        diff[i] = I_all[i]-J_relevant[5]
+        diff[i] = I_all[i]-J_relevant[1]
         distance[i,0] = LA.norm(diff[i])
         distance[i,1] = i
         sort=distance[np.argsort(distance[:,0])]
 
-# Lösche Punkte die Anzahl NN überschreitet
+# Lösche Punkte die Anzahl Nearest Neighbor überschreitet
     i = len(I_all)-1
     while i >= n_neighbors:
         sort = np.delete(sort, i , 0)
         i = i-1
 
-# Bestimme die NN inneren Punkte 
+# Bestimme die Nearest Neighbor inneren Punkte 
     NN = np.zeros((len(sort), dim))
     for i in range(len(sort)):
         NN[i] = I_all[int(sort[i,1])]
     plt.scatter(I_all[:,0], I_all[:,1], c='mediumblue',s=50,lw=0)
     plt.scatter(J_relevant[:,0], J_relevant[:,1], c='goldenrod',s=50,lw=0)
-    plt.scatter(J_relevant[5,0], J_relevant[5,1], c='cyan',s=50,lw=0)
+    plt.scatter(J_relevant[1,0], J_relevant[1,1], c='cyan',s=50,lw=0)
     plt.scatter(NN[:,0], NN[:,1], c='limegreen',s=50,lw=0)
 plt.axis('equal')
-#plt.show()
+plt.show()
         
 # Monome
+x_all = x[:,0]
+y_all = x[:,1]
+size_mon = np.int((degree+1)*(degree+2)/2)
 
+eval_monomials_py = np.zeros((size_mon, gridStorage.getSize()))
+#print(eval_monomials_py)
+k=0
+for i in range(degree+1):
+    for j in range (degree+1):
+        if i+j<=3:
+            #print(pow(x,i)*pow(y,j))
+            eval_monomials_py[k]=(pow(x_all,i)*pow(y_all,j))
+            k=k+1
+        
+eval_monomials_py = np.transpose(eval_monomials_py)
+#print(eval_monomials_py)
 
-
-
+eval_monomials = pysgpp.DataMatrix(gridStorage.getSize(), size_mon)
+for j in range(size_mon):
+    for i in range(gridStorage.getSize()):
+        eval_monomials.set(i,j,eval_monomials_py[i,j])
+#print(eval_monomials)
 
 # Interpolation
-
-#eval = pysgpp.DataVector(gridStorage.getSize(),0.0)
-
-#print('bis hier ok')
-eval = pysgpp.DataVector(gridStorage.getSize(), 0.0)
-for i in range(gridStorage.getSize()):
-  gp = gridStorage.getPoint(i)
-  eval[i] = gp.getStandardCoordinate(0)
-print(eval)
-for i in range(len(eval)):
-    eval[i]=pow(eval[i], 2)
-print(eval)
-
-coeffs = pysgpp.DataVector(gridStorage.getSize(),0.0)
+printLine()
+coeffs = pysgpp.DataMatrix(gridStorage.getSize(), size_mon)
 hierSLE = pysgpp.OptHierarchisationSLE(grid)
 sleSolver = pysgpp.OptAutoSLESolver()
-if not sleSolver.solve(hierSLE, eval, coeffs):
+if not sleSolver.solve(hierSLE, eval_monomials, coeffs):
     print("Solving failed, exiting.")
     sys.exit(1)
 
 # Result of SLE 
-print("coeffs solved: {}".format(coeffs))
-
+# coeffs ist 17x10 Matrix 
+#print("coeffs solved: {}".format(coeffs)) 
+printLine()
+print('Anzahl coeffs = {}'.format(coeffs.getSize()))
+print('Reihen coeffs = {}'.format(coeffs.getNrows()))
+print('Spalten coeffs = {}'.format(coeffs.getNcols()))
