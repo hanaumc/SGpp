@@ -7,6 +7,8 @@ import matplotlib.pyplot as plt
 import weightfunction
 from mpl_toolkits import mplot3d
 from numpy import linalg as LA
+import nearestneighbors
+
 
     
 def printLine():
@@ -53,14 +55,19 @@ elif dim == 3:
         x[i] = [gp.getStandardCoordinate(0), gp.getStandardCoordinate(1), gp.getStandardCoordinate(2)]
         eval_circle[i]=weightfunction.circle(radius, x[i])            
 
+
 # Überprüfung auf innere und äußere Punkte 
 p0=0
 n0=0
+index_I = np.zeros(len(eval_circle))
+#index_J = np.zeros(len(eval_circle))
 for i in range(len(eval_circle)):
     if eval_circle[i] > 0:
         p0=p0+1
+        index_I[i] = i
     else:
         n0=n0+1
+        #index_J[i]= i
 I_all = np.zeros((p0,dim))
 J_all = np.zeros((n0,dim))
 p1=0
@@ -72,6 +79,8 @@ for i in range(len(eval_circle)):
     else:
         J_all[n1]=x[i]
         n1=n1+1
+print(index_I)
+#print(index_J)
 
 # Plot von inneren und äußeren Punkten 
 if dim == 2:
@@ -85,7 +94,7 @@ elif dim == 3:
     ax.scatter(I_all[:,0], I_all[:,1], I_all[:,2], c='mediumblue', s=50, lw=0)
     ax.scatter(J_all[:,0], J_all[:,1], J_all[:,2], c='crimson', s=50, lw=0)
 plt.axis('equal')
-plt.show()
+#plt.show()
 
 # Bestimme Gitterweite h
 h = 2**(-level)
@@ -99,6 +108,7 @@ if dim == 2:
             J_relevant = np.vstack((J_relevant, J_all[i]))            
 J_relevant = np.delete(J_relevant, 0, 0)     
 
+
 # Plotte relevante Punkte
 if dim == 2:
     #ax = plt.axes(projection='3d')
@@ -106,7 +116,7 @@ if dim == 2:
     plt.scatter(I_all[:,0], I_all[:,1], c='mediumblue', s=50, lw=0)
     plt.scatter(J_relevant[:,0], J_relevant[:,1], c='goldenrod', s=50, lw=0)
 plt.axis('equal')
-plt.show()
+#plt.show()
 
 # Anzahl Nearest Neighbors
 n_neighbors = (degree+1)**dim
@@ -115,7 +125,7 @@ print("Anzahl Nearest Neighbors: {}".format(n_neighbors))
 # Punkt 5 ist der links oben für den nearest neighbors getestet wird.
 # Berechne Abstand der relevanten äußeren Punkte zu allen inneren Punkten und sortiere nach Abstand
 diff = np.zeros((len(I_all), dim))
-distance = np.zeros((len(I_all),2))
+distance = np.zeros((len(I_all),dim))
 
 
 k=0
@@ -125,7 +135,7 @@ if k==1:
             diff[i] = I_all[i]-J_relevant[j]
             distance[i,0] = LA.norm(diff[i])
             distance[i,1] = i
-            sort=distance[np.argsort(distance[:,0])]
+            sort = distance[np.argsort(distance[:,0])]
 
 # Lösche Punkte die Anzahl Nearest Neighbor überschreitet
         i = len(I_all)-1
@@ -138,13 +148,14 @@ if k==1:
         for i in range(len(sort)):
             NN[i] = I_all[int(sort[i,1])]
 
-        plt.scatter(I_all[:,0], I_all[:,1], c='mediumblue')
-        plt.scatter(J_relevant[:,0], J_relevant[:,1], c='goldenrod')
-        plt.scatter(J_relevant[j,0], J_relevant[j,1], c='cyan') #(NN z.B. für Punkt 5)
-        plt.scatter(NN[:,0], NN[:,1], c='limegreen')
+        plt.scatter(I_all[:,0], I_all[:,1], c='mediumblue',s=50,lw=0)
+        plt.scatter(J_relevant[:,0], J_relevant[:,1], c='goldenrod',s=50,lw=0)
+        plt.scatter(J_relevant[j,0], J_relevant[j,1], c='cyan',s=50,lw=0) 
+        plt.scatter(NN[:,0], NN[:,1], c='limegreen',s=50,lw=0)
 else:
+    j=0 #(NN z.B. für J_relevant[0])
     for i in range(len(I_all)):
-        diff[i] = I_all[i]-J_relevant[1]
+        diff[i] = I_all[i]-J_relevant[j]
         distance[i,0] = LA.norm(diff[i])
         distance[i,1] = i
         sort=distance[np.argsort(distance[:,0])]
@@ -161,10 +172,18 @@ else:
         NN[i] = I_all[int(sort[i,1])]
     plt.scatter(I_all[:,0], I_all[:,1], c='mediumblue',s=50,lw=0)
     plt.scatter(J_relevant[:,0], J_relevant[:,1], c='goldenrod',s=50,lw=0)
-    plt.scatter(J_relevant[1,0], J_relevant[1,1], c='cyan',s=50,lw=0)
+    plt.scatter(J_relevant[j,0], J_relevant[j,1], c='cyan',s=50,lw=0)
     plt.scatter(NN[:,0], NN[:,1], c='limegreen',s=50,lw=0)
+# Index NN Punkte in Gesamtgitterpunkte x
+    index_NN = np.zeros(n_neighbors)
+    for i in range(len(NN)):
+        for j in range(len(x)):
+            if NN[i,0]==x[j,0] and NN[i,1]==x[j,1]:
+                index_NN[i] = j
+    print('Index_NN = {}'.format(index_NN))
+    print(NN)
 plt.axis('equal')
-plt.show()
+#plt.show()
         
 # Monome
 x_all = x[:,0]
@@ -190,19 +209,89 @@ for j in range(size_mon):
         eval_monomials.set(i,j,eval_monomials_py[i,j])
 #print(eval_monomials)
 
-# Interpolation
+# Interpolation über alle Punkte für Koeffizientenmatrix aller Punkte
 printLine()
-coeffs = pysgpp.DataMatrix(gridStorage.getSize(), size_mon)
+coeffs_all = pysgpp.DataMatrix(gridStorage.getSize(), size_mon)
 hierSLE = pysgpp.OptHierarchisationSLE(grid)
 sleSolver = pysgpp.OptAutoSLESolver()
-if not sleSolver.solve(hierSLE, eval_monomials, coeffs):
+if not sleSolver.solve(hierSLE, eval_monomials, coeffs_all):
     print("Solving failed, exiting.")
     sys.exit(1)
 
 # Result of SLE 
-# coeffs ist 17x10 Matrix 
-#print("coeffs solved: {}".format(coeffs)) 
+# coeffs_all ist 49x10 Matrix 
+#print("coeffs_all solved: {}".format(coeffs_all)) 
 printLine()
-print('Anzahl coeffs = {}'.format(coeffs.getSize()))
-print('Reihen coeffs = {}'.format(coeffs.getNrows()))
-print('Spalten coeffs = {}'.format(coeffs.getNcols()))
+print('Anzahl coeffs_all = {}'.format(coeffs_all.getSize()))
+print('Reihen coeffs_all = {}'.format(coeffs_all.getNrows()))
+print('Spalten coeffs_all = {}'.format(coeffs_all.getNcols()))
+
+printLine()
+# Index äußere Punkte in Gesamtgitterpunkte x
+index_J = np.zeros(len(J_relevant))
+for i in range(len(J_relevant)):
+    for j in range(len(x)):
+        if J_relevant[i,0]==x[j,0] and J_relevant[i,1]==x[j,1]:
+            index_J[i] = j
+print('Index_J = {}'.format(index_J))
+
+printLine()
+
+# Definiere Extension Koeffizienten 
+extension_coeffs = pysgpp.DataMatrix(len(NN),1)
+
+# Definiere Koeffizientenmatrix von Nearest Neighbors Punkten und befüllen der Matrix
+coeffs_NN = pysgpp.DataMatrix(len(NN),coeffs_all.getNcols())
+c1=pysgpp.DataVector(coeffs_all.getNcols())
+for i in range(len(NN)):
+    coeffs_all.getRow(int(index_NN[i]),c1)
+    coeffs_NN.setRow(i,c1)
+printLine()
+coeffs_NN.transpose()
+#print(coeffs_NN)
+
+# Definiere Koeffizientenmatrix der äußeren relevanten Punkte und befüllen der Matrix(=Zielvektor)
+coeffs_J = pysgpp.DataMatrix(coeffs_all.getNcols(),1)
+c2 = pysgpp.DataVector(coeffs_all.getNcols())
+coeffs_all.getRow(int(index_J[0]), c2)
+coeffs_J.setColumn(0,c2)
+print(coeffs_NN)
+printLine()
+print(extension_coeffs)
+print(coeffs_J)
+
+
+fullSLE = pysgpp.OptFullSLE(coeffs_NN)
+sleSolver = pysgpp.OptAutoSLESolver()
+if not sleSolver.solve(fullSLE, coeffs_J, extension_coeffs):
+    print("Solving failed, exiting.")
+    sys.exit(1)
+    
+print(extension_coeffs)
+
+
+print(J_relevant)
+
+#q=pysgpp.DataMatrix(2,2)
+#q.set(0,0,2)
+#q.set(0,1,3)
+#q.set(1,0,1)
+#q.set(1,1,5)
+#w=pysgpp.DataVector(2)
+#w.set(0,5)
+#w.set(1,6)
+#e=pysgpp.DataVector(2)
+
+
+#fullSLE = pysgpp.OptFullSLE(q)
+#sleSolver = pysgpp.OptAutoSLESolver()
+#if not sleSolver.solve(fullSLE, w, e):
+#    print("Solving failed, exiting.")
+#    sys.exit(1)
+
+#print(e)
+
+
+
+
+
