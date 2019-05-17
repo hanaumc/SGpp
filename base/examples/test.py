@@ -10,14 +10,15 @@ from numpy import linalg as LA
 import nearestneighbors
 
 
+
     
 def printLine():
     print("--------------------------------------------------------------------------------------")
     
 dim = 2         # Dimension
 radius = 0.1    # Radius von Kreis
-degree = 3      # Grad von B-Splines
-level = 4       # Level von Sparse Grid
+degree = 3      # Grad von B-Splines (nur ungerade)
+level = 3       # Level von Sparse Grid
 
 # Gitter für Kreis erzeugen und auswerten
 x0 = np.linspace(0, 1, 50)
@@ -32,6 +33,9 @@ plt.contour(X[0], X[1], Z, 0)
 plt.axis('equal')
 #plt.show()
 
+# Festlegen der Basis
+basis = pysgpp.SBsplineBase(degree)
+
 # Erzeugen von Gitter
 grid = pysgpp.Grid.createWEBsplineGrid(dim, degree)
 gridStorage = grid.getStorage()
@@ -39,21 +43,60 @@ print("dimensionality:           {}".format(gridStorage.getDimension()))
 grid.getGenerator().regular(level)
 print("number of grid points:    {}".format(gridStorage.getSize()))
 
+
+
 # Vektor 'x' enthält Koordinaten von Gitterpunkten
 # anschl. auswerten von Gewichtsfunktion des Kreises an Gitterpunkten
 x = np.zeros((gridStorage.getSize(),dim))
+lvl = np.zeros((gridStorage.getSize(),dim))
+ind = np.zeros((gridStorage.getSize(),dim))
 eval_circle= np.zeros(gridStorage.getSize())
 
 if dim == 2:
     for i in range(gridStorage.getSize()):
         gp = gridStorage.getPoint(i)
+        lvl[i] = [gp.getLevel(0), gp.getLevel(1)]
+        ind[i] = [gp.getIndex(0), gp.getIndex(1)]
         x[i] = [gp.getStandardCoordinate(0), gp.getStandardCoordinate(1)]   
         eval_circle[i]=weightfunction.circle(radius, x[i])
-elif dim == 3:
-    for i in range(gridStorage.getSize()):
-        gp = gridStorage.getPoint(i)
-        x[i] = [gp.getStandardCoordinate(0), gp.getStandardCoordinate(1), gp.getStandardCoordinate(2)]
-        eval_circle[i]=weightfunction.circle(radius, x[i])            
+#elif dim == 3:
+#    for i in range(gridStorage.getSize()):
+#        gp = gridStorage.getPoint(i)
+#        x[i] = [gp.getStandardCoordinate(0), gp.getStandardCoordinate(1), gp.getStandardCoordinate(2)]
+#        eval_circle[i]=weightfunction.circle(radius, x[i])            
+
+
+A = np.zeros((gridStorage.getSize(), gridStorage.getSize()))
+print(x)
+print('lvl  : {}'.format(lvl))
+print('ind: {}'.format(ind))
+
+                                                      
+
+
+for i in range(gridStorage.getSize()):
+    for j in range(gridStorage.getSize()):
+        A[i,j] = basis.eval(int(lvl[j,0]), int(ind[j,0]), x[i,0])*basis.eval(int(lvl[j,1]), int(ind[j,1]), x[i,1])
+#print(A)
+
+        
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 # Überprüfung auf innere und äußere Punkte 
@@ -79,7 +122,7 @@ for i in range(len(eval_circle)):
     else:
         J_all[n1]=x[i]
         n1=n1+1
-print(index_I)
+#print(index_I)
 #print(index_J)
 
 # Plot von inneren und äußeren Punkten 
@@ -88,11 +131,11 @@ if dim == 2:
     #ax.contour3D(X[0], X[1], Z, 50, cmap='binary')
     plt.scatter(I_all[:,0], I_all[:,1], c='mediumblue', s=50, lw=0)
     plt.scatter(J_all[:,0], J_all[:,1], c='crimson', s=50, lw=0)
-elif dim == 3:
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
-    ax.scatter(I_all[:,0], I_all[:,1], I_all[:,2], c='mediumblue', s=50, lw=0)
-    ax.scatter(J_all[:,0], J_all[:,1], J_all[:,2], c='crimson', s=50, lw=0)
+#elif dim == 3:
+#    fig = plt.figure()
+#    ax = fig.add_subplot(111, projection='3d')
+#    ax.scatter(I_all[:,0], I_all[:,1], I_all[:,2], c='mediumblue', s=50, lw=0)
+#    ax.scatter(J_all[:,0], J_all[:,1], J_all[:,2], c='crimson', s=50, lw=0)
 plt.axis('equal')
 #plt.show()
 
@@ -180,14 +223,13 @@ else:
         for j in range(len(x)):
             if NN[i,0]==x[j,0] and NN[i,1]==x[j,1]:
                 index_NN[i] = j
-    print('Index_NN = {}'.format(index_NN))
-    print(NN)
 plt.axis('equal')
 #plt.show()
         
 # Monome
 x_all = x[:,0]
 y_all = x[:,1]
+#print(x_all)
 size_mon = np.int((degree+1)*(degree+2)/2)
 
 eval_monomials_py = np.zeros((size_mon, gridStorage.getSize()))
@@ -195,82 +237,114 @@ eval_monomials_py = np.zeros((size_mon, gridStorage.getSize()))
 k=0
 for i in range(degree+1):
     for j in range (degree+1):
-        if i+j<=3:
+        if i+j<=degree:
             #print(pow(x,i)*pow(y,j))
             eval_monomials_py[k]=(pow(x_all,i)*pow(y_all,j))
             k=k+1
+#print(eval_monomials_py)
         
 eval_monomials_py = np.transpose(eval_monomials_py)
-#print(eval_monomials_py)
+print('eval = {}'.format(eval_monomials_py))
+
+
+s = np.linalg.solve(A,eval_monomials_py)
+print(s)
+
+error = eval_monomials_py - np.matmul(A,s)
+
+print(error)
+
+
+
+
 
 eval_monomials = pysgpp.DataMatrix(gridStorage.getSize(), size_mon)
 for j in range(size_mon):
     for i in range(gridStorage.getSize()):
         eval_monomials.set(i,j,eval_monomials_py[i,j])
-#print(eval_monomials)
+
 
 # Interpolation über alle Punkte für Koeffizientenmatrix aller Punkte
 printLine()
 coeffs_all = pysgpp.DataMatrix(gridStorage.getSize(), size_mon)
+#print(coeffs_all)
 hierSLE = pysgpp.OptHierarchisationSLE(grid)
 sleSolver = pysgpp.OptAutoSLESolver()
 if not sleSolver.solve(hierSLE, eval_monomials, coeffs_all):
     print("Solving failed, exiting.")
     sys.exit(1)
+printLine()
+print(coeffs_all)
+
+coeff_test = np.zeros(size_mon)
+for i in range(size_mon):
+    coeff_test[i]=coeffs_all.get(0,i)
+#print(coeff_test)
+
+
+err = LA.norm(error)
+print(err)
 
 # Result of SLE 
 # coeffs_all ist 49x10 Matrix 
 #print("coeffs_all solved: {}".format(coeffs_all)) 
-printLine()
-print('Anzahl coeffs_all = {}'.format(coeffs_all.getSize()))
-print('Reihen coeffs_all = {}'.format(coeffs_all.getNrows()))
-print('Spalten coeffs_all = {}'.format(coeffs_all.getNcols()))
+#printLine()
+#print('Anzahl coeffs_all = {}'.format(coeffs_all.getSize()))
+#print('Reihen coeffs_all = {}'.format(coeffs_all.getNrows()))
+#print('Spalten coeffs_all = {}'.format(coeffs_all.getNcols()))
 
-printLine()
+#printLine()
 # Index äußere Punkte in Gesamtgitterpunkte x
-index_J = np.zeros(len(J_relevant))
-for i in range(len(J_relevant)):
-    for j in range(len(x)):
-        if J_relevant[i,0]==x[j,0] and J_relevant[i,1]==x[j,1]:
-            index_J[i] = j
-print('Index_J = {}'.format(index_J))
+#index_J = np.zeros(len(J_relevant))
+#for i in range(len(J_relevant)):
+#    for j in range(len(x)):
+#        if J_relevant[i,0]==x[j,0] and J_relevant[i,1]==x[j,1]:
+#            index_J[i] = j
+#print('Index_J = {}'.format(index_J))
 
-printLine()
+#printLine()
 
 # Definiere Extension Koeffizienten 
-extension_coeffs = pysgpp.DataMatrix(len(NN),1)
+#extension_coeffs = pysgpp.DataMatrix(len(NN),1)
 
 # Definiere Koeffizientenmatrix von Nearest Neighbors Punkten und befüllen der Matrix
-coeffs_NN = pysgpp.DataMatrix(len(NN),coeffs_all.getNcols())
-c1=pysgpp.DataVector(coeffs_all.getNcols())
-for i in range(len(NN)):
-    coeffs_all.getRow(int(index_NN[i]),c1)
-    coeffs_NN.setRow(i,c1)
-printLine()
-coeffs_NN.transpose()
+#coeffs_NN = pysgpp.DataMatrix(len(NN),coeffs_all.getNcols())
+#c1=pysgpp.DataVector(coeffs_all.getNcols())
+#for i in range(len(NN)):
+#    coeffs_all.getRow(int(index_NN[i]),c1)
+#    coeffs_NN.setRow(i,c1)
+#printLine()
+#coeffs_NN.transpose()
 #print(coeffs_NN)
 
 # Definiere Koeffizientenmatrix der äußeren relevanten Punkte und befüllen der Matrix(=Zielvektor)
-coeffs_J = pysgpp.DataMatrix(coeffs_all.getNcols(),1)
-c2 = pysgpp.DataVector(coeffs_all.getNcols())
-coeffs_all.getRow(int(index_J[0]), c2)
-coeffs_J.setColumn(0,c2)
-print(coeffs_NN)
-printLine()
-print(extension_coeffs)
-print(coeffs_J)
+#coeffs_J = pysgpp.DataMatrix(coeffs_all.getNcols(),1)
+#c2 = pysgpp.DataVector(coeffs_all.getNcols())
+#coeffs_all.getRow(int(index_J[0]), c2)
+#coeffs_J.setColumn(0,c2)
+#print(coeffs_NN)
+#printLine()
+#print(extension_coeffs)
+#printLine()
+#print(coeffs_J)
 
 
-fullSLE = pysgpp.OptFullSLE(coeffs_NN)
-sleSolver = pysgpp.OptAutoSLESolver()
-if not sleSolver.solve(fullSLE, coeffs_J, extension_coeffs):
-    print("Solving failed, exiting.")
-    sys.exit(1)
+#fullSLE = pysgpp.OptFullSLE(coeffs_NN)
+#sleSolver = pysgpp.OptAutoSLESolver()
+#if not sleSolver.solve(fullSLE, coeffs_J, extension_coeffs):
+#    print("Solving failed, exiting.")
+#    sys.exit(1)
     
-print(extension_coeffs)
+#print('extension_coeffs = {}'.format(extension_coeffs))
 
 
-print(J_relevant)
+
+
+
+
+#printLine()
+
+#print(J_relevant)
 
 #q=pysgpp.DataMatrix(2,2)
 #q.set(0,0,2)
