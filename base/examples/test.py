@@ -48,16 +48,19 @@ print("number of grid points:    {}".format(gridStorage.getSize()))
 # Vektor 'x' enthält Koordinaten von Gitterpunkten
 # anschl. auswerten von Gewichtsfunktion des Kreises an Gitterpunkten
 x = np.zeros((gridStorage.getSize(),dim))
+index_x = np.zeros((gridStorage.getSize()))
 lvl = np.zeros((gridStorage.getSize(),dim))
 ind = np.zeros((gridStorage.getSize(),dim))
 eval_circle= np.zeros(gridStorage.getSize())
+
 
 if dim == 2:
     for i in range(gridStorage.getSize()):
         gp = gridStorage.getPoint(i)
         lvl[i] = [gp.getLevel(0), gp.getLevel(1)]
         ind[i] = [gp.getIndex(0), gp.getIndex(1)]
-        x[i] = [gp.getStandardCoordinate(0), gp.getStandardCoordinate(1)]   
+        x[i] = [gp.getStandardCoordinate(0), gp.getStandardCoordinate(1)]
+        index_x[i] = i   
         eval_circle[i]=weightfunction.circle(radius, x[i])
 #elif dim == 3:
 #    for i in range(gridStorage.getSize()):
@@ -68,8 +71,8 @@ if dim == 2:
 
 A = np.zeros((gridStorage.getSize(), gridStorage.getSize()))
 #print(x)
-#print('lvl  : {}'.format(lvl))
-#print('ind: {}'.format(ind))
+print('lvl  : {}'.format(lvl))
+print('ind: {}'.format(ind))
                                                    
 
 for i in range(gridStorage.getSize()):
@@ -96,6 +99,7 @@ for i in range(len(eval_circle)):
     else:
         J_all[n1]=x[i]
         n1=n1+1
+        
 
 # Plot von inneren und äußeren Punkten 
 if dim == 2:
@@ -129,9 +133,16 @@ for i in range(len(J_relevant)):
     for j in range(len(x)):
         if J_relevant[i,0]==x[j,0] and J_relevant[i,1]==x[j,1]:
             index_J_relevant[i] = j
-#print(index_J_relevant)                
+#print(index_J_relevant)    
+            
+# Index der inneren Punkte unter Gesamtpunkten x
+index_I_all = np.zeros(len(I_all))
 
-
+for i in range(len(I_all)):
+    for j in range(len(x)):
+        if I_all[i,0]==x[j,0] and I_all[i,1]==x[j,1]:
+            index_I_all[i] = j
+#print(index_I_all)
 
 # Plotte relevante Punkte
 if dim == 2:
@@ -172,13 +183,7 @@ if k==1:
         for i in range(len(sort)):
             NN[i,dim*j] = I_all[int(sort[i,1]), 0]
             NN[i,dim*j+1] = I_all[int(sort[i,1]), 1]
-
-#        plt.scatter(I_all[:,0], I_all[:,1], c='mediumblue',s=50,lw=0)
-#        plt.scatter(J_relevant[:,0], J_relevant[:,1], c='goldenrod',s=50,lw=0)
-#        plt.scatter(J_relevant[j,0], J_relevant[j,1], c='cyan',s=50,lw=0) 
-#        plt.scatter(NN[:,0], NN[:,1], c='limegreen',s=50,lw=0)
-        #print('NN : {}'.format(NN))
-        #printLine()
+        
 # Index der nearest neighbor Punkte unter allen Punkten x
     index_NN = np.zeros((n_neighbors, len(J_relevant)))
     for j in range(len(J_relevant)):
@@ -186,8 +191,19 @@ if k==1:
             for k in range(len(x)):
                 if NN[i,dim*j]==x[k,0] and NN[i,dim*j+1]==x[k,1]:
                     index_NN[i,j] = k
+    print(J_relevant)
+    print(NN)
+    print(index_NN)                
+# Plot der nearest neighbors 
+    for i in range(len(J_relevant)):
+        plt.scatter(I_all[:,0], I_all[:,1], c='mediumblue',s=50,lw=0)
+        plt.scatter(J_relevant[:,0], J_relevant[:,1], c='goldenrod',s=50,lw=0)
+        plt.scatter(J_relevant[i,0], J_relevant[i,1], c='cyan',s=50,lw=0) 
+        plt.scatter(NN[:,dim*i], NN[:,dim*i+1], c='limegreen',s=50,lw=0)
+        plt.axis('equal')
+        #plt.show()
 else:
-    j=0 # Setze j auf den 
+    j=0 # Setze j auf den Index des zu betrachtenden äußeren Punktes
     for i in range(len(I_all)):
         diff[i] = I_all[i]-J_relevant[j]
         distance[i,0] = LA.norm(diff[i])
@@ -204,42 +220,34 @@ else:
     NN = np.zeros((len(sort), dim))
     for i in range(len(sort)):
         NN[i] = I_all[int(sort[i,1])]
-    plt.scatter(I_all[:,0], I_all[:,1], c='mediumblue',s=50,lw=0)
-    plt.scatter(J_relevant[:,0], J_relevant[:,1], c='goldenrod',s=50,lw=0)
-    plt.scatter(J_relevant[j,0], J_relevant[j,1], c='cyan',s=50,lw=0)
-    plt.scatter(NN[:,0], NN[:,1], c='limegreen',s=50,lw=0)
+    print(NN)
+    print(J_relevant)
 
 # Index der nearest neighbor Punkte unter allen Punkten x
     index_NN = np.zeros(n_neighbors)
     for i in range(len(NN)):
-        for j in range(len(x)):
-            if NN[i,0]==x[j,0] and NN[i,1]==x[j,1]:
-                index_NN[i] = j
-plt.axis('equal')
-#plt.show()
-#print(x)
-#print(NN)
-#print(index_NN)
+        for k in range(len(x)):
+            if NN[i,0]==x[k,0] and NN[i,1]==x[k,1]:
+                index_NN[i] = k
+                
+# Plot der nearest neighbors für einen Punkt äußeren Punkt j
+    plt.scatter(I_all[:,0], I_all[:,1], c='mediumblue',s=50,lw=0)
+    plt.scatter(J_relevant[:,0], J_relevant[:,1], c='goldenrod',s=50,lw=0)
+    plt.scatter(J_relevant[j,0], J_relevant[j,1], c='cyan',s=50,lw=0)
+    plt.scatter(NN[:,0], NN[:,1], c='limegreen',s=50,lw=0)
+    plt.axis('equal')
+    plt.show()
         
-# Monome
-x_all = x[:,0]
-y_all = x[:,1]
-#print(x_all)
+# Monome definieren und an allen Gitterpunkten auswerten
 size_monomials = np.int((degree+1)*(degree+2)/2)
-
 eval_monomials = np.zeros((size_monomials, gridStorage.getSize()))
-#print(eval_monomials)
 k=0
 for i in range(degree+1):
     for j in range (degree+1):
         if i+j<=degree:
-            #print(pow(x,i)*pow(y,j))
-            eval_monomials[k]=(pow(x_all,i)*pow(y_all,j))
-            k=k+1
-#print(eval_monomials_py)
-        
+            eval_monomials[k]=(pow(x[:,0],i)*pow(x[:,1],j))
+            k=k+1    
 eval_monomials = np.transpose(eval_monomials)
-#print('eval = {}'.format(eval_monomials))
 
 # Löse LGS und erhalte coeffs
 coeffs = np.linalg.solve(A,eval_monomials)
@@ -252,7 +260,6 @@ if error > pow(10,-14):
 
 # Definiere Koeffizientenmatrix mit Koeffizienten der nearest neighbor Punkte zum jeweiligen äußeren Punkt
 coeffs_J_relevant = np.zeros((size_monomials))
-
 extension_coeffs = np.zeros((n_neighbors, len(J_relevant))) 
 
 for j in range(len(J_relevant)):
@@ -263,10 +270,43 @@ for j in range(len(J_relevant)):
     # in Spalte j stehen die coeffs des j-ten inneren NN von einem(!) äußeren Punkt i    
     coeffs_inner_NN = np.transpose(coeffs_inner_NN)
     coeffs_J_relevant = coeffs[int(index_J_relevant[j])]
-    solution = np.linalg.lstsq(coeffs_inner_NN, coeffs_J_relevant)
+    solution = np.linalg.lstsq(coeffs_inner_NN, coeffs_J_relevant) # löse mit least squares
     # in Spalte j stehen die Extensionkoeffs für äußeren Punkt j
     extension_coeffs[:,j] = solution[0]
-print(extension_coeffs)
+#print(extension_coeffs)
+#print(extension_coeffs.shape)
+
+#print(x)
+
+# WEB Splines 
+J_I=np.zeros((index_NN.shape[0],len(x)))
+for i in range(len(index_x)):
+    for j in range((index_NN.shape[1])):
+        for k in range((index_NN.shape[0])):
+            if index_x[i] == index_NN[k,j]:
+                #print(i,index_J_relevant[j])
+                J_I[j,i]=index_J_relevant[j]
+print(J_I)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
