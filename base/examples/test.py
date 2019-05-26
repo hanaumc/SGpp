@@ -220,8 +220,7 @@ else:
     NN = np.zeros((len(sort), dim))
     for i in range(len(sort)):
         NN[i] = I_all[int(sort[i,1])]
-    print(NN)
-    print(J_relevant)
+
 
 # Index der nearest neighbor Punkte unter allen Punkten x
     index_NN = np.zeros(n_neighbors)
@@ -279,34 +278,79 @@ for j in range(len(J_relevant)):
 #print(x)
 
 # WEB Splines 
-J_I=np.zeros((index_NN.shape[0],len(x)))
-for i in range(len(index_x)):
+J_I=np.zeros((index_NN.shape[0],len(I_all)))#x
+for i in range(len(I_all)):#index_x
     for j in range((index_NN.shape[1])):
         for k in range((index_NN.shape[0])):
             if index_x[i] == index_NN[k,j]:
                 #print(i,index_J_relevant[j])
                 J_I[j,i]=index_J_relevant[j]
+
+                
+                
+
 print(J_I)
+print(J_I.shape)
+#print(J_relevant)
+#print(I_all.shape)
+#print(I_all)
+#print(x)
+#print(NN)
+
+#print(index_J_relevant)
+#print(index_I_all)
+
+
+print(index_I_all)
+
+
+for i in range(len(I_all)):
+    bi = basis.eval(int(lvl[int(index_I_all[i]),0]), int(ind[int(index_I_all[i]),0]), x[int(index_I_all[i]),0])*basis.eval(int(lvl[int(index_I_all[i]),1]), int(ind[int(index_I_all[i]),1]), x[int(index_I_all[i]),1])   
+    #print(bi)
+    sum=0
+    for j in range(index_NN.shape[1]):
+        for k in range(index_NN.shape[0]):
+            if index_NN[k,j] == index_I_all[i] and J_I[j,i] != 0: 
+                #print(k,j)
+                sum = sum + extension_coeffs[k,j]*basis.eval(int(lvl[int(J_I[j,i]),0]), int(ind[int(J_I[j,i]),0]), x[int(index_I_all[i]),0])#*basis.eval(int(lvl[int(J_I[j,i]),1]), int(ind[int(J_I[j,i]),1]), x[int(index_I_all[i]),1])
+                #print(extension_coeffs[k,j])
+                #print(sum)
+    extended_Bspline = bi+sum 
+    WEBspline = weightfunction.circle(radius,x[int(index_I_all[i])]) * extended_Bspline
+    #printLine()
+    print(WEBspline)
+            
+#print(index_I_all)            
+#print(lvl)
+#print(ind)
+#print(x)
+#print(basis.eval(1,1,0.5)*basis.eval(1,1,0.5))
+#print(basis.eval(3,5,0.625)*basis.eval(1,1,0.5))
+#print(extension_coeffs)
+#print(extension_coeffs.shape)
+#print(index_NN)
+#print(index_NN.shape)
+#print(J_I[:,1])
+
+
+#for j in range(J_I.shape[1]):
+#    for k in range(J_I.shape[0]):
+#        if J_I[k,j] != 0:
+#            print(int(index_J_relevant[k]),j)
+            #print(lvl[J_I[j,i]])
+            #print(ind[J_I[j,i]])
+            #print(basis.eval(int(lvl[int(J_I[k,j]),0]), int(ind[int(J_I[k,j]),0]), x[j,0])*basis.eval(int(lvl[int(J_I[k,j]),1]), int(ind[int(J_I[k,j]),1]), x[j,1]))
+
+
+#x=0
+#for i in range(5):
+#    for j in range(3):
+#        x=x+i*j
+#        print(x)
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+#print(J_I)
 
 
 
