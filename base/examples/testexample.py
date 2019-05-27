@@ -45,6 +45,7 @@ print("number of grid points:  {}".format(gridStorage.getSize()))
 ## 0.0. (This is superfluous here as we initialize them in the
 ## next few lines anyway.)
 alpha = pysgpp.DataVector(gridStorage.getSize(),0.0)
+gitterpunkte= pysgpp.DataVector(gridStorage.getSize(),0.0)
 print("length of alpha vector: {}".format(len(alpha)))
 
 ## The \c for loop iterates over all grid points: For each grid
@@ -55,8 +56,10 @@ print("length of alpha vector: {}".format(len(alpha)))
 printLine()
 for i in range(gridStorage.getSize()):
   gp = gridStorage.getPoint(i)
+  gitterpunkte[i] = gp.getStandardCoordinate(0)
   alpha[i] = f(gp.getStandardCoordinate(0))
 
+print("Gitterpunkte: {}".format(gitterpunkte))
 print("alpha: {}".format(alpha))
 #print("gp = {}".format(gp.getStandardCoordinate(0)))
 
@@ -154,7 +157,7 @@ for i in range(len(a)):
     diff[i] = a[i]-b[i]
 print(diff)
     
-a.sub(b) # Routinen auf DataVector.hpp verwenden!
+a.sub(b) # Routinen aus DataVector.hpp verwenden!
 print(a)   
 
 
