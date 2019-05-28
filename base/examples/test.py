@@ -60,20 +60,17 @@ def function_tilde(p, l):
 
 dim = 2  # Dimension
 radius = 0.1  # Radius von Kreis
-degree = 3  # Grad von B-Splines (nur ungerade)
-level = 4       # Level von Sparse Grid
+degree = 5  # Grad von B-Splines (nur ungerade)
+level = 5       # Level von Sparse Grid
 
-p = np.zeros((200, 2))
+p = np.zeros((100, 2))
 counter = 0 
-while counter < 10:
+while counter < 100:
     z = np.random.rand(1, 2)
     if weightfunction.circle(radius, z[0]) > 0:
         p[counter] = z[0]
         counter = counter + 1
-# print(p)
-
-for i in range(4, 9):
-    print(i)
+#print(p)
 
 # Gitter für Kreis erzeugen und auswerten
 x0 = np.linspace(0, 1, 50)
@@ -86,7 +83,7 @@ Z = weightfunction.circle(radius, X)
 # Plot von Kreis
 plt.contour(X[0], X[1], Z, 0)
 plt.axis('equal')
-# plt.show()
+#plt.show()
 
 # Festlegen der Basis
 basis = pysgpp.SBsplineBase(degree)
@@ -160,16 +157,16 @@ if dim == 2:
 #    ax.scatter(I_all[:,0], I_all[:,1], I_all[:,2], c='mediumblue', s=50, lw=0)
 #    ax.scatter(J_all[:,0], J_all[:,1], J_all[:,2], c='crimson', s=50, lw=0)
 plt.axis('equal')
-# plt.show()
+#plt.show()
 
 # Bestimme Gitterweite h
 h = 2 ** (-level)
-print("Gitterweite:              {}".format((degree - 1) * h))
+print("Gitterweite:              {}".format(h))
 
 # Bestimme Eckpunkte von Träger von Punkt (x,y)
 J_relevant = np.zeros(dim)
 for i in range(len(J_all)):
-    if weightfunction.circle(radius, J_all[i] - (degree - 1) * h) > 0 or weightfunction.circle(radius, [J_all[i, 0] - (degree - 1) * h, J_all[i, 1] + (degree - 1) * h]) > 0 or weightfunction.circle(radius, [J_all[i, 0] + (degree - 1) * h, J_all[i, 1] - (degree - 1) * h]) > 0 or weightfunction.circle(radius, J_all[i] + (degree - 1) * h) > 0: 
+    if weightfunction.circle(radius, J_all[i] - ((degree/2+0.5) * h)) > 0 or weightfunction.circle(radius, [J_all[i, 0] - ((degree/2+0.5) * h), J_all[i, 1] + ((degree/2+0.5) * h)]) > 0 or weightfunction.circle(radius, [J_all[i, 0] + ((degree/2+0.5) * h), J_all[i, 1] - ((degree/2+0.5) * h)]) > 0 or weightfunction.circle(radius, J_all[i] + ((degree/2+0.5) * h)) > 0: 
         J_relevant = np.vstack((J_relevant, J_all[i]))            
 J_relevant = np.delete(J_relevant, 0, 0)
 
@@ -196,7 +193,7 @@ if dim == 2:
     plt.scatter(I_all[:, 0], I_all[:, 1], c='mediumblue', s=50, lw=0)
     plt.scatter(J_relevant[:, 0], J_relevant[:, 1], c='goldenrod', s=50, lw=0)
 plt.axis('equal')
-# plt.show()
+#plt.show()
 
 # Anzahl Nearest Neighbors
 n_neighbors = (degree + 1) ** dim
@@ -246,8 +243,9 @@ if k == 1:
         plt.scatter(J_relevant[:, 0], J_relevant[:, 1], c='goldenrod', s=50, lw=0)
         plt.scatter(J_relevant[i, 0], J_relevant[i, 1], c='cyan', s=50, lw=0) 
         plt.scatter(NN[:, dim * i], NN[:, dim * i + 1], c='limegreen', s=50, lw=0)
+        #plt.contour(X[0], X[1], Z, 0)
         plt.axis('equal')
-        # plt.show()
+        #plt.show()
 else:
     j = 0  # Setze j auf den Index des zu betrachtenden äußeren Punktes
     for i in range(len(I_all)):
@@ -297,10 +295,10 @@ eval_monomials = np.transpose(eval_monomials)
 coeffs = np.linalg.solve(A, eval_monomials)
 
 # Test ob Lösen des LGS erfolgreich war
-error = eval_monomials - np.matmul(A, coeffs)
-error = LA.norm(error)
-if error > pow(10, -14):
-    print('failed. error > 10e-14')
+# error = eval_monomials - np.matmul(A, coeffs)
+# error = LA.norm(error)
+# if error > pow(10, -14):
+#     print('failed. error > 10e-14')
     
 # Definiere Koeffizientenmatrix mit Koeffizienten der nearest neighbor Punkte zum jeweiligen äußeren Punkt
 coeffs_J_relevant = np.zeros((size_monomials))
@@ -407,12 +405,22 @@ alpha = np.linalg.solve(A_WEB, ev_f)
 # print(alpha)
 
 
- 
-err = 0
-for i in range(len(p)):
-    err = err + (function(p[i]) - function_tilde(p, i)) ** 2
-err = err ** (1 / 2)
-print('error : {}'.format(err[0]))  
+
+# err = 0
+# for i in range(len(p)):
+#     f = np.sin(8 * p[i,0]) + np.sin(7 * p[i,1])
+#     f = f * weightfunction.circle(radius, p[i])
+#     f_tilde = 0
+#     for j in range(len(I_all)):      
+#         f_tilde = f_tilde + alpha[j] * WEBspline(p, j, i)
+#     err = err + (f - f_tilde) ** 2
+# err = err ** (1 / 2)
+# print('error : {}'.format(err[0]))  
+
+
+
+
+
 
 # counter = 0 
 # while counter < 10:
