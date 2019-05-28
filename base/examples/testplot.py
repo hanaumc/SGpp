@@ -61,27 +61,23 @@ def function_tilde(p, l):
 dim = 2  # Dimension
 radius = 0.1  # Radius von Kreis
 degree = 3  # Grad von B-Splines (nur ungerade)
-#level = 4       # Level von Sparse Grid
+#level = 5       # Level von Sparse Grid
 
 p = np.zeros((10000, 2))
 counter = 0 
-while counter < len(p):
+while counter < 10000:
     z = np.random.rand(1, 2)
     if weightfunction.circle(radius, z[0]) > 0:
         p[counter] = z[0]
         counter = counter + 1
-# print(p)
 
-Level = np.arange(4,6,1)
+error = np.zeros((4,1))
+Level = np.zeros((4,1))
 
-L2Error = np.zeros()
-
-
-print(level_plot) 
-
-for i in range(len(Level)):
-    level = Level[i]
-    print('level : {}'.format(level))
+          
+for v in range(4,8):
+    level = v
+    
     # Gitter für Kreis erzeugen und auswerten
     x0 = np.linspace(0, 1, 50)
     if dim == 2:
@@ -93,7 +89,7 @@ for i in range(len(Level)):
     # Plot von Kreis
     plt.contour(X[0], X[1], Z, 0)
     plt.axis('equal')
-    # plt.show()
+    #plt.show()
     
     # Festlegen der Basis
     basis = pysgpp.SBsplineBase(degree)
@@ -167,16 +163,16 @@ for i in range(len(Level)):
     #    ax.scatter(I_all[:,0], I_all[:,1], I_all[:,2], c='mediumblue', s=50, lw=0)
     #    ax.scatter(J_all[:,0], J_all[:,1], J_all[:,2], c='crimson', s=50, lw=0)
     plt.axis('equal')
-    # plt.show()
+    #plt.show()
     
     # Bestimme Gitterweite h
     h = 2 ** (-level)
-    print("Gitterweite:              {}".format((degree - 1) * h))
+    print("Gitterweite:              {}".format(h))
     
     # Bestimme Eckpunkte von Träger von Punkt (x,y)
     J_relevant = np.zeros(dim)
     for i in range(len(J_all)):
-        if weightfunction.circle(radius, J_all[i] - (degree - 1) * h) > 0 or weightfunction.circle(radius, [J_all[i, 0] - (degree - 1) * h, J_all[i, 1] + (degree - 1) * h]) > 0 or weightfunction.circle(radius, [J_all[i, 0] + (degree - 1) * h, J_all[i, 1] - (degree - 1) * h]) > 0 or weightfunction.circle(radius, J_all[i] + (degree - 1) * h) > 0: 
+        if weightfunction.circle(radius, J_all[i] - ((degree/2+0.5) * h)) > 0 or weightfunction.circle(radius, [J_all[i, 0] - ((degree/2+0.5) * h), J_all[i, 1] + ((degree/2+0.5) * h)]) > 0 or weightfunction.circle(radius, [J_all[i, 0] + ((degree/2+0.5) * h), J_all[i, 1] - ((degree/2+0.5) * h)]) > 0 or weightfunction.circle(radius, J_all[i] + ((degree/2+0.5) * h)) > 0: 
             J_relevant = np.vstack((J_relevant, J_all[i]))            
     J_relevant = np.delete(J_relevant, 0, 0)
     
@@ -203,7 +199,7 @@ for i in range(len(Level)):
         plt.scatter(I_all[:, 0], I_all[:, 1], c='mediumblue', s=50, lw=0)
         plt.scatter(J_relevant[:, 0], J_relevant[:, 1], c='goldenrod', s=50, lw=0)
     plt.axis('equal')
-    # plt.show()
+    #plt.show()
     
     # Anzahl Nearest Neighbors
     n_neighbors = (degree + 1) ** dim
@@ -253,8 +249,9 @@ for i in range(len(Level)):
             plt.scatter(J_relevant[:, 0], J_relevant[:, 1], c='goldenrod', s=50, lw=0)
             plt.scatter(J_relevant[i, 0], J_relevant[i, 1], c='cyan', s=50, lw=0) 
             plt.scatter(NN[:, dim * i], NN[:, dim * i + 1], c='limegreen', s=50, lw=0)
+            #plt.contour(X[0], X[1], Z, 0)
             plt.axis('equal')
-            # plt.show()
+            #plt.show()
     else:
         j = 0  # Setze j auf den Index des zu betrachtenden äußeren Punktes
         for i in range(len(I_all)):
@@ -304,10 +301,10 @@ for i in range(len(Level)):
     coeffs = np.linalg.solve(A, eval_monomials)
     
     # Test ob Lösen des LGS erfolgreich war
-    error = eval_monomials - np.matmul(A, coeffs)
-    error = LA.norm(error)
-    if error > pow(10, -14):
-        print('failed. error > 10e-14')
+    # error = eval_monomials - np.matmul(A, coeffs)
+    # error = LA.norm(error)
+    # if error > pow(10, -14):
+    #     print('failed. error > 10e-14')
         
     # Definiere Koeffizientenmatrix mit Koeffizienten der nearest neighbor Punkte zum jeweiligen äußeren Punkt
     coeffs_J_relevant = np.zeros((size_monomials))
@@ -414,12 +411,27 @@ for i in range(len(Level)):
     # print(alpha)
     
     
-     
+    
     err = 0
     for i in range(len(p)):
-        err = err + (function(p[i]) - function_tilde(p, i)) ** 2
+        f = np.sin(8 * p[i,0]) + np.sin(7 * p[i,1])
+        f = f * weightfunction.circle(radius, p[i])
+        f_tilde = 0
+        for j in range(len(I_all)):      
+            f_tilde = f_tilde + alpha[j] * WEBspline(p, j, i)
+        err = err + (f - f_tilde) ** 2
     err = err ** (1 / 2)
     print('error : {}'.format(err[0]))  
+
+    error[v-4]= err
+    Level[v-4]= v
+
+plt.show()
+plt.scatter(Level,error, c='mediumblue', s=50, lw=0)      
+plt.plot(Level,error,c='mediumblue')
+plt.show()    
+    
+    
     
     # counter = 0 
     # while counter < 10:
@@ -431,4 +443,3 @@ for i in range(len(Level)):
     #        counter = counter + 1
     # err = err**(1/2)
     # print(err)
-    
