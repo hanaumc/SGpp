@@ -59,9 +59,9 @@ def function_tilde(p, l):
 
 
 dim = 2  # Dimension
-radius = 0.1  # Radius von Kreis
-degree = 5  # Grad von B-Splines (nur ungerade)
-level = 5       # Level von Sparse Grid
+radius = 0.3  # Radius von Kreis
+degree = 3  # Grad von B-Splines (nur ungerade)
+level = 4       # Level von Sparse Grid
 
 p = np.zeros((100, 2))
 counter = 0 
@@ -103,19 +103,15 @@ lvl = np.zeros((gridStorage.getSize(), dim))
 ind = np.zeros((gridStorage.getSize(), dim))
 eval_circle = np.zeros(gridStorage.getSize())
 
-if dim == 2:
-    for i in range(gridStorage.getSize()):
-        gp = gridStorage.getPoint(i)
-        lvl[i] = [gp.getLevel(0), gp.getLevel(1)]
-        ind[i] = [gp.getIndex(0), gp.getIndex(1)]
-        x[i] = [gp.getStandardCoordinate(0), gp.getStandardCoordinate(1)]
-        index_x[i] = i   
-        eval_circle[i] = weightfunction.circle(radius, x[i])
-# elif dim == 3:
-#    for i in range(gridStorage.getSize()):
-#        gp = gridStorage.getPoint(i)
-#        x[i] = [gp.getStandardCoordinate(0), gp.getStandardCoordinate(1), gp.getStandardCoordinate(2)]
-#        eval_circle[i]=weightfunction.circle(radius, x[i])            
+
+for i in range(gridStorage.getSize()):
+    gp = gridStorage.getPoint(i)
+    lvl[i] = [gp.getLevel(0), gp.getLevel(1)]
+    ind[i] = [gp.getIndex(0), gp.getIndex(1)]
+    x[i] = [gp.getStandardCoordinate(0), gp.getStandardCoordinate(1)]
+    index_x[i] = i   
+    eval_circle[i] = weightfunction.circle(radius, x[i])
+      
 
 A = np.zeros((gridStorage.getSize(), gridStorage.getSize()))
 # print(x)
@@ -148,52 +144,82 @@ for i in range(len(eval_circle)):
         n1 = n1 + 1
 
 # Plot von inneren und äußeren Punkten 
-if dim == 2:
-    plt.scatter(I_all[:, 0], I_all[:, 1], c='mediumblue', s=50, lw=0)
-    plt.scatter(J_all[:, 0], J_all[:, 1], c='crimson', s=50, lw=0)
-# elif dim == 3:
-#    fig = plt.figure()
-#    ax = fig.add_subplot(111, projection='3d')
-#    ax.scatter(I_all[:,0], I_all[:,1], I_all[:,2], c='mediumblue', s=50, lw=0)
-#    ax.scatter(J_all[:,0], J_all[:,1], J_all[:,2], c='crimson', s=50, lw=0)
+plt.scatter(I_all[:, 0], I_all[:, 1], c='mediumblue', s=50, lw=0)
+plt.scatter(J_all[:, 0], J_all[:, 1], c='crimson', s=50, lw=0)
 plt.axis('equal')
 #plt.show()
 
-# Bestimme Gitterweite h
-h = 2 ** (-level)
-print("Gitterweite:              {}".format(h))
-
-# Bestimme Eckpunkte von Träger von Punkt (x,y)
-J_relevant = np.zeros(dim)
-for i in range(len(J_all)):
-    if weightfunction.circle(radius, J_all[i] - ((degree/2+0.5) * h)) > 0 or weightfunction.circle(radius, [J_all[i, 0] - ((degree/2+0.5) * h), J_all[i, 1] + ((degree/2+0.5) * h)]) > 0 or weightfunction.circle(radius, [J_all[i, 0] + ((degree/2+0.5) * h), J_all[i, 1] - ((degree/2+0.5) * h)]) > 0 or weightfunction.circle(radius, J_all[i] + ((degree/2+0.5) * h)) > 0: 
-        J_relevant = np.vstack((J_relevant, J_all[i]))            
-J_relevant = np.delete(J_relevant, 0, 0)
-
-# Index der relevanten äußeren Punkte unter Gesamtpunkten x
-index_J_relevant = np.zeros(len(J_relevant))
-
-for i in range(len(J_relevant)):
-    for j in range(len(x)):
-        if J_relevant[i, 0] == x[j, 0] and J_relevant[i, 1] == x[j, 1]:
-            index_J_relevant[i] = j
-# print(index_J_relevant)    
-            
 # Index der inneren Punkte unter Gesamtpunkten x
 index_I_all = np.zeros(len(I_all))
-
 for i in range(len(I_all)):
     for j in range(len(x)):
         if I_all[i, 0] == x[j, 0] and I_all[i, 1] == x[j, 1]:
             index_I_all[i] = j
-# print(index_I_all)
+
+# Index der äußeren Punkte unter Gesamtpunkten x
+index_J_all = np.zeros(len(J_all))
+for i in range(len(J_all)):
+    for j in range(len(x)):
+        if J_all[i, 0] == x[j, 0] and J_all[i, 1] == x[j, 1]:
+            index_J_all[i] = j
+#print(index_I_all)
+print(index_J_all)
+#print(x)
+print(x[30])
+print(lvl[30])
+print(J_all[13])
+
+# Bestimme Gitterweite (h_x,h_y) in Abhängigkeit vom Level
+
+h = np.zeros((len(x),dim))
+for i in range(len(h)):
+    h[i] = 2**(-lvl[i])
+
+# Bestimme Eckpunkte des Trägers des B-Splines von Punkt (x,y)
+# E1 links oben, E2 links unten, E3, rechts unten, E4 rechts oben
+E1 = np.zeros((len(J_all), dim))
+E2 = np.zeros((len(J_all), dim))
+E3 = np.zeros((len(J_all), dim))
+E4 = np.zeros((len(J_all), dim))
+for j in range(J_all.shape[1]):
+    for i in range(J_all.shape[0]):
+        E2[i,j] = J_all[i,j]-h[int(index_J_all[i]),j]*((degree+1)/2)
+        E4[i,j] = J_all[i,j]+h[int(index_J_all[i]),j]*((degree+1)/2)
+        if j==0:
+            E1[i,j] = J_all[i,j]-h[int(index_J_all[i]),j]*((degree+1)/2)
+            E3[i,j] = J_all[i,j]+h[int(index_J_all[i]),j]*((degree+1)/2)
+        elif j==1:
+            E1[i,j] = J_all[i,j]+h[int(index_J_all[i]),j]*((degree+1)/2)
+            E3[i,j] = J_all[i,j]-h[int(index_J_all[i]),j]*((degree+1)/2)
+
+print(E1[13])
+
+
+
+# Bestimme relevante äußere Punkte durch Auswerten der Gewichtsfunktion an den Eckpunkten.
+# Falls Gewichtsfunktion an einem Eckpunkt positiv, dann ist es relevanter äußerer Punkt
+J_relevant = np.zeros(dim)
+for i in range(len(J_all)):
+    if weightfunction.circle(radius, E1[i]) > 0 or weightfunction.circle(radius,E2[i]) > 0 or weightfunction.circle(radius,E3[i]) > 0 or weightfunction.circle(radius,E4[i]) > 0: 
+        J_relevant = np.vstack((J_relevant, J_all[i]))            
+J_relevant = np.delete(J_relevant, 0, 0)
+#print(J_relevant)
+
+# Index der relevanten äußeren Punkte unter Gesamtpunkten x
+index_J_relevant = np.zeros(len(J_relevant))
+for i in range(len(J_relevant)):
+    for j in range(len(x)):
+        if J_relevant[i, 0] == x[j, 0] and J_relevant[i, 1] == x[j, 1]:
+            index_J_relevant[i] = j
+    
+            
 
 # Plotte relevante Punkte
-if dim == 2:
-    plt.scatter(I_all[:, 0], I_all[:, 1], c='mediumblue', s=50, lw=0)
-    plt.scatter(J_relevant[:, 0], J_relevant[:, 1], c='goldenrod', s=50, lw=0)
+plt.scatter(I_all[:, 0], I_all[:, 1], c='mediumblue', s=50, lw=0)
+plt.scatter(J_relevant[:, 0], J_relevant[:, 1], c='goldenrod', s=50, lw=0)
+plt.scatter(x[30, 0], x[30, 1], c='cyan', s=50, lw=0)
 plt.axis('equal')
-#plt.show()
+plt.show()
 
 # Anzahl Nearest Neighbors
 n_neighbors = (degree + 1) ** dim
@@ -214,7 +240,6 @@ if k == 1:
             distance[i, 0] = LA.norm(diff[i])
             distance[i, 1] = i
             sort = distance[np.argsort(distance[:, 0])]
-        # print(sort)
 
 # Lösche Punkte die Anzahl Nearest Neighbor überschreitet
         i = len(I_all) - 1
@@ -234,9 +259,7 @@ if k == 1:
             for k in range(len(x)):
                 if NN[i, dim * j] == x[k, 0] and NN[i, dim * j + 1] == x[k, 1]:
                     index_NN[i, j] = k
-    # print(J_relevant)
-    # print(NN)
-    # print(index_NN)                
+               
 # Plot der nearest neighbors 
     for i in range(len(J_relevant)):
         plt.scatter(I_all[:, 0], I_all[:, 1], c='mediumblue', s=50, lw=0)
@@ -315,10 +338,7 @@ for j in range(len(J_relevant)):
     solution = np.linalg.lstsq(coeffs_inner_NN, coeffs_J_relevant)  # löse mit least squares
     # in Spalte j stehen die Extensionkoeffs für äußeren Punkt j
     extension_coeffs[:, j] = solution[0]
-# print(extension_coeffs)
-# print(extension_coeffs.shape)
 
-# print(x)
 
 # WEB Splines 
 # J_I=np.zeros((index_NN.shape[0],len(I_all)))#x
@@ -375,14 +395,7 @@ for j in range(len(J_relevant)):
 #        #print(WEBspline)
 #        A_WEB[l,i] = WEBspline
 
-# print(A_WEB)
-# print(I_all.shape)
-# print(J_relevant.shape)
-# print(J_all.shape) 
-# print(NN.shape)
-# print(A_WEB.shape)
-# print(x.shape)
-# print(index_J_relevant.shape)
+
 
 # Matrix A_WEB mit WEB Splines ausgewertet an inneren Punkten füllen: a_l,i = WEBspline_i(x_l) für alle i,l in innere Punkte I
 A_WEB = np.zeros((len(I_all), len(I_all)))  
@@ -418,17 +431,3 @@ alpha = np.linalg.solve(A_WEB, ev_f)
 # print('error : {}'.format(err[0]))  
 
 
-
-
-
-
-# counter = 0 
-# while counter < 10:
-#    z = np.random.rand(1,2)
-# #    print(z)
-# #    print(z[0])
-#    if weightfunction.circle(radius,z[0]) > 0:
-#        err = err + (function(z[0])-function_tilde(z))**2
-#        counter = counter + 1
-# err = err**(1/2)
-# print(err)
