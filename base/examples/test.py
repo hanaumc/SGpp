@@ -9,6 +9,7 @@ from mpl_toolkits import mplot3d
 from numpy import linalg as LA
 
 
+
 def printLine():
     print("--------------------------------------------------------------------------------------")
 
@@ -23,14 +24,14 @@ def function(x):
 
 # Definiere WEB-Splines
 def WEBspline(x, i, l):
-    J_I = np.zeros((index_NN.shape[1], len(I_all)))  # x
-    #print(J_I.shape)
-#    for i in range(len(I_all)):#index_x
-    for j in range((index_NN.shape[1])):
-        for k in range((index_NN.shape[0])):
-            if index_x[i] == index_NN[k, j]:
-                # print(i,index_J_relevant[j])
-                J_I[j, i] = index_J_relevant[j]
+#     J_I = np.zeros((index_NN.shape[1], len(I_all)))  # x
+#     #print(J_I.shape)
+# #    for i in range(len(I_all)):#index_x
+#     for j in range((index_NN.shape[1])):
+#         for k in range((index_NN.shape[0])):
+#             if index_x[i] == index_NN[k, j]:
+#                 # print(i,index_J_relevant[j])
+#                 J_I[j, i] = index_J_relevant[j]
 
 #    for i in range(len(I_all)):
     bi = basis.eval(int(lvl[int(index_I_all[i]), 0]), int(ind[int(index_I_all[i]), 0]), x[l, 0]) * basis.eval(int(lvl[int(index_I_all[i]), 1]), int(ind[int(index_I_all[i]), 1]), x[l, 1])   
@@ -61,11 +62,11 @@ def function_tilde(p, l):
 dim = 2  # Dimension
 radius = 0.3  # Radius von Kreis
 degree = 3  # Grad von B-Splines (nur ungerade)
-level = 4       # Level von Sparse Grid
+level = 5       # Level von Sparse Grid
 
-p = np.zeros((100, 2))
+p = np.zeros((10000, 2))
 counter = 0 
-while counter < 100:
+while counter < 10000:
     z = np.random.rand(1, 2)
     if weightfunction.circle(radius, z[0]) > 0:
         p[counter] = z[0]
@@ -162,12 +163,7 @@ for i in range(len(J_all)):
     for j in range(len(x)):
         if J_all[i, 0] == x[j, 0] and J_all[i, 1] == x[j, 1]:
             index_J_all[i] = j
-#print(index_I_all)
-print(index_J_all)
-#print(x)
-print(x[30])
-print(lvl[30])
-print(J_all[13])
+
 
 # Bestimme Gitterweite (h_x,h_y) in Abhängigkeit vom Level
 
@@ -175,35 +171,32 @@ h = np.zeros((len(x),dim))
 for i in range(len(h)):
     h[i] = 2**(-lvl[i])
 
-# Bestimme Eckpunkte des Trägers des B-Splines von Punkt (x,y)
-# E1 links oben, E2 links unten, E3, rechts unten, E4 rechts oben
-E1 = np.zeros((len(J_all), dim))
-E2 = np.zeros((len(J_all), dim))
-E3 = np.zeros((len(J_all), dim))
-E4 = np.zeros((len(J_all), dim))
-for j in range(J_all.shape[1]):
-    for i in range(J_all.shape[0]):
-        E2[i,j] = J_all[i,j]-h[int(index_J_all[i]),j]*((degree+1)/2)
-        E4[i,j] = J_all[i,j]+h[int(index_J_all[i]),j]*((degree+1)/2)
-        if j==0:
-            E1[i,j] = J_all[i,j]-h[int(index_J_all[i]),j]*((degree+1)/2)
-            E3[i,j] = J_all[i,j]+h[int(index_J_all[i]),j]*((degree+1)/2)
-        elif j==1:
-            E1[i,j] = J_all[i,j]+h[int(index_J_all[i]),j]*((degree+1)/2)
-            E3[i,j] = J_all[i,j]-h[int(index_J_all[i]),j]*((degree+1)/2)
+# 3D Matrix
+supp_points = np.zeros((len(J_all),(degree+2)**dim, dim))
 
-print(E1[13])
 
+for l in range(len(J_all)):
+    m = 0
+    for i in range(int(-(degree+1)/2),int((degree+1)/2)+1):
+        for j in range(int(-(degree+1)/2),int((degree+1)/2)+1):
+            supp_points[l,m,0] = J_all[l,0]+i*h[int(index_J_all[l]),0]
+            supp_points[l,m,1] = J_all[l,1]+j*h[int(index_J_all[l]),1]  
+            m=m+1
+#print(supp_points)
 
 
 # Bestimme relevante äußere Punkte durch Auswerten der Gewichtsfunktion an den Eckpunkten.
 # Falls Gewichtsfunktion an einem Eckpunkt positiv, dann ist es relevanter äußerer Punkt
 J_relevant = np.zeros(dim)
-for i in range(len(J_all)):
-    if weightfunction.circle(radius, E1[i]) > 0 or weightfunction.circle(radius,E2[i]) > 0 or weightfunction.circle(radius,E3[i]) > 0 or weightfunction.circle(radius,E4[i]) > 0: 
-        J_relevant = np.vstack((J_relevant, J_all[i]))            
+eval_supp_points_circle = np.zeros(supp_points.shape[1])
+for i in range(supp_points.shape[0]):
+    for j in range(supp_points.shape[1]):
+        eval_supp_points_circle[j] = weightfunction.circle(radius, supp_points[i,j])
+    if (eval_supp_points_circle > 0).any():
+        J_relevant = np.vstack((J_relevant, J_all[i]))      
 J_relevant = np.delete(J_relevant, 0, 0)
 #print(J_relevant)
+
 
 # Index der relevanten äußeren Punkte unter Gesamtpunkten x
 index_J_relevant = np.zeros(len(J_relevant))
@@ -217,7 +210,7 @@ for i in range(len(J_relevant)):
 # Plotte relevante Punkte
 plt.scatter(I_all[:, 0], I_all[:, 1], c='mediumblue', s=50, lw=0)
 plt.scatter(J_relevant[:, 0], J_relevant[:, 1], c='goldenrod', s=50, lw=0)
-plt.scatter(x[30, 0], x[30, 1], c='cyan', s=50, lw=0)
+#plt.scatter(x[30, 0], x[30, 1], c='cyan', s=50, lw=0)
 plt.axis('equal')
 plt.show()
 
@@ -339,63 +332,19 @@ for j in range(len(J_relevant)):
     # in Spalte j stehen die Extensionkoeffs für äußeren Punkt j
     extension_coeffs[:, j] = solution[0]
 
+# print(index_J_relevant)
+# print(index_NN)
+# print(x)
+# print(NN)
 
-# WEB Splines 
-# J_I=np.zeros((index_NN.shape[0],len(I_all)))#x
-# for i in range(len(I_all)):#index_x
-#    for j in range((index_NN.shape[1])):
-#        for k in range((index_NN.shape[0])):
-#            if index_x[i] == index_NN[k,j]:
-#                #print(i,index_J_relevant[j])
-#                J_I[j,i]=index_J_relevant[j]
-
-# for i in range(len(I_all)):
-#    bi = basis.eval(int(lvl[int(index_I_all[i]),0]), int(ind[int(index_I_all[i]),0]), x[int(index_I_all[i]),0])*basis.eval(int(lvl[int(index_I_all[i]),1]), int(ind[int(index_I_all[i]),1]), x[int(index_I_all[i]),1])   
-#    #print(bi)
-#    sum=0
-#    for j in range(index_NN.shape[1]):
-#        for k in range(index_NN.shape[0]):
-#            if index_NN[k,j] == index_I_all[i] and J_I[j,i] != 0: 
-#                #print(k,j)
-#                sum = sum + extension_coeffs[k,j]*basis.eval(int(lvl[int(J_I[j,i]),0]), int(ind[int(J_I[j,i]),0]), x[int(index_I_all[i]),0])#*basis.eval(int(lvl[int(J_I[j,i]),1]), int(ind[int(J_I[j,i]),1]), x[int(index_I_all[i]),1])
-#                #print(extension_coeffs[k,j])
-#                #print(sum)
-#    extended_Bspline = bi+sum 
-#    WEBspline = weightfunction.circle(radius,x[int(index_I_all[i])]) * extended_Bspline
-#    #printLine()
-#    print(WEBspline)
-
-# HIER RICHTIG!!!
-# WEB-Splines
-# J_I=np.zeros((index_NN.shape[0],len(I_all)))#x
-# for i in range(len(I_all)):#index_x
-#    for j in range((index_NN.shape[1])):
-#        for k in range((index_NN.shape[0])):
-#            if index_x[i] == index_NN[k,j]:
-#                #print(i,index_J_relevant[j])
-#                J_I[j,i]=index_J_relevant[j]
-
-# Matrix A mit WEB Splines füllen
-# A_WEB = np.zeros((len(I_all), len(I_all)))    
-# for i in range(len(I_all)):
-#    for l in range(len(I_all)):
-#        bi = basis.eval(int(lvl[int(index_I_all[i]),0]), int(ind[int(index_I_all[i]),0]), x[int(index_I_all[l]),0])*basis.eval(int(lvl[int(index_I_all[i]),1]), int(ind[int(index_I_all[i]),1]), x[int(index_I_all[l]),1])   
-#        #print(bi)
-#        sum=0
-#        for j in range(index_NN.shape[1]):
-#            for k in range(index_NN.shape[0]):
-#                if index_NN[k,j] == index_I_all[i] and J_I[j,i] != 0: 
-#                    #print(k,j)
-#                    sum = sum + extension_coeffs[k,j]*basis.eval(int(lvl[int(J_I[j,i]),0]), int(ind[int(J_I[j,i]),0]), x[int(index_I_all[l]),0])*basis.eval(int(lvl[int(J_I[j,i]),1]), int(ind[int(J_I[j,i]),1]), x[int(index_I_all[l]),1])
-#                    #print(extension_coeffs[k,j])
-#                    #print(sum)
-#        extended_Bspline = bi+sum 
-#        WEBspline = weightfunction.circle(radius,x[int(index_I_all[l])]) * extended_Bspline
-#        #printLine()
-#        #print(WEBspline)
-#        A_WEB[l,i] = WEBspline
-
-
+J_I = np.zeros((index_NN.shape[1], len(I_all)))  # x
+for i in range(len(I_all)):#index_x
+    for j in range((index_NN.shape[1])):
+        for k in range((index_NN.shape[0])):
+            if index_x[i] == index_NN[k, j]:
+                # print(i,index_J_relevant[j])
+                J_I[j, i] = index_J_relevant[j]
+#print(J_I)
 
 # Matrix A_WEB mit WEB Splines ausgewertet an inneren Punkten füllen: a_l,i = WEBspline_i(x_l) für alle i,l in innere Punkte I
 A_WEB = np.zeros((len(I_all), len(I_all)))  
@@ -415,17 +364,21 @@ for i in range(len(I_all)):
 
 # LGS lösen für Interpolationskoeffizient alpha
 alpha = np.linalg.solve(A_WEB, ev_f)
-# print(alpha)
+#print(alpha)
 
+print(index_NN)
+print(index_I_all)
+print(J_I)
 
 
 # err = 0
-# for i in range(len(p)):
-#     f = np.sin(8 * p[i,0]) + np.sin(7 * p[i,1])
-#     f = f * weightfunction.circle(radius, p[i])
+# for l in range(len(p)):
+#     f = np.sin(8 * p[l,0]) + np.sin(7 * p[l,1])
+#     f = f * weightfunction.circle(radius, p[l])
 #     f_tilde = 0
-#     for j in range(len(I_all)):      
-#         f_tilde = f_tilde + alpha[j] * WEBspline(p, j, i)
+#     for i in range(len(I_all)):      
+#         f_tilde = f_tilde + alpha[i] * WEBspline(p, i, l)
+#     #print(f_tilde)
 #     err = err + (f - f_tilde) ** 2
 # err = err ** (1 / 2)
 # print('error : {}'.format(err[0]))  
