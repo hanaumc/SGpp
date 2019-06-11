@@ -5,9 +5,13 @@ import numpy as np
 import matplotlib 
 import matplotlib.pyplot as plt
 import weightfunction
+import scipy 
+from scipy import special
 from mpl_toolkits import mplot3d
 from numpy import linalg as LA
 
+
+scipy.special.binom(5, 2)
 
 
 def printLine():
@@ -21,6 +25,17 @@ def function(x):
     f = f * weightfunction.circle(radius, x)
     return f
 
+def binomial(n, k):
+    if 0 <= k <= n:
+        ntok = 1
+        ktok = 1
+        for t in xrange(1, min(k, n - k) + 1):
+            ntok *= n
+            ktok *= t
+            n -= 1
+        return ntok // ktok
+    else:
+        return 0
 
 # Definiere WEB-Splines
 def WEBspline(x, i, l):
@@ -62,7 +77,7 @@ def function_tilde(p, l):
 dim = 2  # Dimension
 radius = 0.3  # Radius von Kreis
 degree = 3  # Grad von B-Splines (nur ungerade)
-level = 5       # Level von Sparse Grid
+level = 4       # Level von Sparse Grid
 
 p = np.zeros((10000, 2))
 counter = 0 
@@ -212,7 +227,7 @@ plt.scatter(I_all[:, 0], I_all[:, 1], c='mediumblue', s=50, lw=0)
 plt.scatter(J_relevant[:, 0], J_relevant[:, 1], c='goldenrod', s=50, lw=0)
 #plt.scatter(x[30, 0], x[30, 1], c='cyan', s=50, lw=0)
 plt.axis('equal')
-plt.show()
+#plt.show()
 
 # Anzahl Nearest Neighbors
 n_neighbors = (degree + 1) ** dim
@@ -252,7 +267,7 @@ if k == 1:
             for k in range(len(x)):
                 if NN[i, dim * j] == x[k, 0] and NN[i, dim * j + 1] == x[k, 1]:
                     index_NN[i, j] = k
-               
+
 # Plot der nearest neighbors 
     for i in range(len(J_relevant)):
         plt.scatter(I_all[:, 0], I_all[:, 1], c='mediumblue', s=50, lw=0)
@@ -295,17 +310,31 @@ else:
     plt.scatter(NN[:, 0], NN[:, 1], c='limegreen', s=50, lw=0)
     plt.axis('equal')
     plt.show()
-        
+
+
+
 # Monome definieren und an allen Gitterpunkten auswerten
-size_monomials = np.int((degree + 1) * (degree + 2) / 2)
-eval_monomials = np.zeros((size_monomials, gridStorage.getSize()))
-k = 0
-for i in range(degree + 1):
-    for j in range (degree + 1):
-        if i + j <= degree:
-            eval_monomials[k] = (pow(x[:, 0], i) * pow(x[:, 1], j))
-            k = k + 1    
-eval_monomials = np.transpose(eval_monomials)
+if degree == 1:
+    size_monomials = 4
+    eval_monomials = np.zeros((size_monomials, gridStorage.getSize()))
+    k = 0
+    for i in range(2):
+        for j in range (2):
+            if i + j <= 2 :
+                eval_monomials[k] = (pow(x[:, 0], i) * pow(x[:, 1], j))
+                k = k + 1    
+    eval_monomials = np.transpose(eval_monomials)
+else:
+    size_monomials = int(scipy.special.binom(degree+dim, dim))   
+    eval_monomials = np.zeros((size_monomials, gridStorage.getSize()))
+    k = 0
+    for i in range(degree + 1):
+        for j in range (degree + 1):
+            if i + j <= degree:
+                eval_monomials[k] = (pow(x[:, 0], i) * pow(x[:, 1], j))
+                k = k + 1    
+    eval_monomials = np.transpose(eval_monomials)
+#print(eval_monomials)
 
 # Löse LGS und erhalte coeffs
 coeffs = np.linalg.solve(A, eval_monomials)
@@ -366,9 +395,6 @@ for i in range(len(I_all)):
 alpha = np.linalg.solve(A_WEB, ev_f)
 #print(alpha)
 
-print(index_NN)
-print(index_I_all)
-print(J_I)
 
 
 # err = 0
