@@ -23,14 +23,14 @@ def function(x):
 
 # Definiere WEB-Splines
 def WEBspline(x, i, l):
-    J_I = np.zeros((index_NN.shape[1], len(I_all)))  # x
-    #print(J_I.shape)
-#    for i in range(len(I_all)):#index_x
-    for j in range((index_NN.shape[1])):
-        for k in range((index_NN.shape[0])):
-            if index_x[i] == index_NN[k, j]:
-                # print(i,index_J_relevant[j])
-                J_I[j, i] = index_J_relevant[j]
+#     J_I = np.zeros((index_NN.shape[1], len(I_all)))  # x
+#     #print(J_I.shape)
+# #    for i in range(len(I_all)):#index_x
+#     for j in range((index_NN.shape[1])):
+#         for k in range((index_NN.shape[0])):
+#             if index_x[i] == index_NN[k, j]:
+#                 # print(i,index_J_relevant[j])
+#                 J_I[j, i] = index_J_relevant[j]
 
 #    for i in range(len(I_all)):
     bi = basis.eval(int(lvl[int(index_I_all[i]), 0]), int(ind[int(index_I_all[i]), 0]), x[l, 0]) * basis.eval(int(lvl[int(index_I_all[i]), 1]), int(ind[int(index_I_all[i]), 1]), x[l, 1])   
@@ -59,7 +59,7 @@ def function_tilde(p, l):
 
 
 dim = 2  # Dimension
-radius = 0.1  # Radius von Kreis
+radius = 0.3  # Radius von Kreis
 degree = 3  # Grad von B-Splines (nur ungerade)
 #level = 5       # Level von Sparse Grid
 
@@ -109,19 +109,15 @@ for v in range(4,8):
     ind = np.zeros((gridStorage.getSize(), dim))
     eval_circle = np.zeros(gridStorage.getSize())
     
-    if dim == 2:
-        for i in range(gridStorage.getSize()):
-            gp = gridStorage.getPoint(i)
-            lvl[i] = [gp.getLevel(0), gp.getLevel(1)]
-            ind[i] = [gp.getIndex(0), gp.getIndex(1)]
-            x[i] = [gp.getStandardCoordinate(0), gp.getStandardCoordinate(1)]
-            index_x[i] = i   
-            eval_circle[i] = weightfunction.circle(radius, x[i])
-    # elif dim == 3:
-    #    for i in range(gridStorage.getSize()):
-    #        gp = gridStorage.getPoint(i)
-    #        x[i] = [gp.getStandardCoordinate(0), gp.getStandardCoordinate(1), gp.getStandardCoordinate(2)]
-    #        eval_circle[i]=weightfunction.circle(radius, x[i])            
+    
+    for i in range(gridStorage.getSize()):
+        gp = gridStorage.getPoint(i)
+        lvl[i] = [gp.getLevel(0), gp.getLevel(1)]
+        ind[i] = [gp.getIndex(0), gp.getIndex(1)]
+        x[i] = [gp.getStandardCoordinate(0), gp.getStandardCoordinate(1)]
+        index_x[i] = i   
+        eval_circle[i] = weightfunction.circle(radius, x[i])
+          
     
     A = np.zeros((gridStorage.getSize(), gridStorage.getSize()))
     # print(x)
@@ -154,50 +150,72 @@ for v in range(4,8):
             n1 = n1 + 1
     
     # Plot von inneren und äußeren Punkten 
-    if dim == 2:
-        plt.scatter(I_all[:, 0], I_all[:, 1], c='mediumblue', s=50, lw=0)
-        plt.scatter(J_all[:, 0], J_all[:, 1], c='crimson', s=50, lw=0)
-    # elif dim == 3:
-    #    fig = plt.figure()
-    #    ax = fig.add_subplot(111, projection='3d')
-    #    ax.scatter(I_all[:,0], I_all[:,1], I_all[:,2], c='mediumblue', s=50, lw=0)
-    #    ax.scatter(J_all[:,0], J_all[:,1], J_all[:,2], c='crimson', s=50, lw=0)
+    plt.scatter(I_all[:, 0], I_all[:, 1], c='mediumblue', s=50, lw=0)
+    plt.scatter(J_all[:, 0], J_all[:, 1], c='crimson', s=50, lw=0)
     plt.axis('equal')
     #plt.show()
     
-    # Bestimme Gitterweite h
-    h = 2 ** (-level)
-    print("Gitterweite:              {}".format(h))
-    
-    # Bestimme Eckpunkte von Träger von Punkt (x,y)
-    J_relevant = np.zeros(dim)
-    for i in range(len(J_all)):
-        if weightfunction.circle(radius, J_all[i] - ((degree/2+0.5) * h)) > 0 or weightfunction.circle(radius, [J_all[i, 0] - ((degree/2+0.5) * h), J_all[i, 1] + ((degree/2+0.5) * h)]) > 0 or weightfunction.circle(radius, [J_all[i, 0] + ((degree/2+0.5) * h), J_all[i, 1] - ((degree/2+0.5) * h)]) > 0 or weightfunction.circle(radius, J_all[i] + ((degree/2+0.5) * h)) > 0: 
-            J_relevant = np.vstack((J_relevant, J_all[i]))            
-    J_relevant = np.delete(J_relevant, 0, 0)
-    
-    # Index der relevanten äußeren Punkte unter Gesamtpunkten x
-    index_J_relevant = np.zeros(len(J_relevant))
-    
-    for i in range(len(J_relevant)):
-        for j in range(len(x)):
-            if J_relevant[i, 0] == x[j, 0] and J_relevant[i, 1] == x[j, 1]:
-                index_J_relevant[i] = j
-    # print(index_J_relevant)    
-                
     # Index der inneren Punkte unter Gesamtpunkten x
     index_I_all = np.zeros(len(I_all))
-    
     for i in range(len(I_all)):
         for j in range(len(x)):
             if I_all[i, 0] == x[j, 0] and I_all[i, 1] == x[j, 1]:
                 index_I_all[i] = j
-    # print(index_I_all)
+    
+    # Index der äußeren Punkte unter Gesamtpunkten x
+    index_J_all = np.zeros(len(J_all))
+    for i in range(len(J_all)):
+        for j in range(len(x)):
+            if J_all[i, 0] == x[j, 0] and J_all[i, 1] == x[j, 1]:
+                index_J_all[i] = j
+    
+    
+    # Bestimme Gitterweite (h_x,h_y) in Abhängigkeit vom Level
+    
+    h = np.zeros((len(x),dim))
+    for i in range(len(h)):
+        h[i] = 2**(-lvl[i])
+    
+    # 3D Matrix
+    supp_points = np.zeros((len(J_all),(degree+2)**dim, dim))
+    
+    
+    for l in range(len(J_all)):
+        m = 0
+        for i in range(int(-(degree+1)/2),int((degree+1)/2)+1):
+            for j in range(int(-(degree+1)/2),int((degree+1)/2)+1):
+                supp_points[l,m,0] = J_all[l,0]+i*h[int(index_J_all[l]),0]
+                supp_points[l,m,1] = J_all[l,1]+j*h[int(index_J_all[l]),1]  
+                m=m+1
+    #print(supp_points)
+    
+    
+    # Bestimme relevante äußere Punkte durch Auswerten der Gewichtsfunktion an den Eckpunkten.
+    # Falls Gewichtsfunktion an einem Eckpunkt positiv, dann ist es relevanter äußerer Punkt
+    J_relevant = np.zeros(dim)
+    eval_supp_points_circle = np.zeros(supp_points.shape[1])
+    for i in range(supp_points.shape[0]):
+        for j in range(supp_points.shape[1]):
+            eval_supp_points_circle[j] = weightfunction.circle(radius, supp_points[i,j])
+        if (eval_supp_points_circle > 0).any():
+            J_relevant = np.vstack((J_relevant, J_all[i]))      
+    J_relevant = np.delete(J_relevant, 0, 0)
+    #print(J_relevant)
+    
+    
+    # Index der relevanten äußeren Punkte unter Gesamtpunkten x
+    index_J_relevant = np.zeros(len(J_relevant))
+    for i in range(len(J_relevant)):
+        for j in range(len(x)):
+            if J_relevant[i, 0] == x[j, 0] and J_relevant[i, 1] == x[j, 1]:
+                index_J_relevant[i] = j
+        
+                
     
     # Plotte relevante Punkte
-    if dim == 2:
-        plt.scatter(I_all[:, 0], I_all[:, 1], c='mediumblue', s=50, lw=0)
-        plt.scatter(J_relevant[:, 0], J_relevant[:, 1], c='goldenrod', s=50, lw=0)
+    plt.scatter(I_all[:, 0], I_all[:, 1], c='mediumblue', s=50, lw=0)
+    plt.scatter(J_relevant[:, 0], J_relevant[:, 1], c='goldenrod', s=50, lw=0)
+    #plt.scatter(x[30, 0], x[30, 1], c='cyan', s=50, lw=0)
     plt.axis('equal')
     #plt.show()
     
@@ -220,7 +238,6 @@ for v in range(4,8):
                 distance[i, 0] = LA.norm(diff[i])
                 distance[i, 1] = i
                 sort = distance[np.argsort(distance[:, 0])]
-            # print(sort)
     
     # Lösche Punkte die Anzahl Nearest Neighbor überschreitet
             i = len(I_all) - 1
@@ -240,9 +257,7 @@ for v in range(4,8):
                 for k in range(len(x)):
                     if NN[i, dim * j] == x[k, 0] and NN[i, dim * j + 1] == x[k, 1]:
                         index_NN[i, j] = k
-        # print(J_relevant)
-        # print(NN)
-        # print(index_NN)                
+                   
     # Plot der nearest neighbors 
         for i in range(len(J_relevant)):
             plt.scatter(I_all[:, 0], I_all[:, 1], c='mediumblue', s=50, lw=0)
@@ -321,74 +336,20 @@ for v in range(4,8):
         solution = np.linalg.lstsq(coeffs_inner_NN, coeffs_J_relevant)  # löse mit least squares
         # in Spalte j stehen die Extensionkoeffs für äußeren Punkt j
         extension_coeffs[:, j] = solution[0]
-    # print(extension_coeffs)
-    # print(extension_coeffs.shape)
     
+    # print(index_J_relevant)
+    # print(index_NN)
     # print(x)
+    # print(NN)
     
-    # WEB Splines 
-    # J_I=np.zeros((index_NN.shape[0],len(I_all)))#x
-    # for i in range(len(I_all)):#index_x
-    #    for j in range((index_NN.shape[1])):
-    #        for k in range((index_NN.shape[0])):
-    #            if index_x[i] == index_NN[k,j]:
-    #                #print(i,index_J_relevant[j])
-    #                J_I[j,i]=index_J_relevant[j]
-    
-    # for i in range(len(I_all)):
-    #    bi = basis.eval(int(lvl[int(index_I_all[i]),0]), int(ind[int(index_I_all[i]),0]), x[int(index_I_all[i]),0])*basis.eval(int(lvl[int(index_I_all[i]),1]), int(ind[int(index_I_all[i]),1]), x[int(index_I_all[i]),1])   
-    #    #print(bi)
-    #    sum=0
-    #    for j in range(index_NN.shape[1]):
-    #        for k in range(index_NN.shape[0]):
-    #            if index_NN[k,j] == index_I_all[i] and J_I[j,i] != 0: 
-    #                #print(k,j)
-    #                sum = sum + extension_coeffs[k,j]*basis.eval(int(lvl[int(J_I[j,i]),0]), int(ind[int(J_I[j,i]),0]), x[int(index_I_all[i]),0])#*basis.eval(int(lvl[int(J_I[j,i]),1]), int(ind[int(J_I[j,i]),1]), x[int(index_I_all[i]),1])
-    #                #print(extension_coeffs[k,j])
-    #                #print(sum)
-    #    extended_Bspline = bi+sum 
-    #    WEBspline = weightfunction.circle(radius,x[int(index_I_all[i])]) * extended_Bspline
-    #    #printLine()
-    #    print(WEBspline)
-    
-    # HIER RICHTIG!!!
-    # WEB-Splines
-    # J_I=np.zeros((index_NN.shape[0],len(I_all)))#x
-    # for i in range(len(I_all)):#index_x
-    #    for j in range((index_NN.shape[1])):
-    #        for k in range((index_NN.shape[0])):
-    #            if index_x[i] == index_NN[k,j]:
-    #                #print(i,index_J_relevant[j])
-    #                J_I[j,i]=index_J_relevant[j]
-    
-    # Matrix A mit WEB Splines füllen
-    # A_WEB = np.zeros((len(I_all), len(I_all)))    
-    # for i in range(len(I_all)):
-    #    for l in range(len(I_all)):
-    #        bi = basis.eval(int(lvl[int(index_I_all[i]),0]), int(ind[int(index_I_all[i]),0]), x[int(index_I_all[l]),0])*basis.eval(int(lvl[int(index_I_all[i]),1]), int(ind[int(index_I_all[i]),1]), x[int(index_I_all[l]),1])   
-    #        #print(bi)
-    #        sum=0
-    #        for j in range(index_NN.shape[1]):
-    #            for k in range(index_NN.shape[0]):
-    #                if index_NN[k,j] == index_I_all[i] and J_I[j,i] != 0: 
-    #                    #print(k,j)
-    #                    sum = sum + extension_coeffs[k,j]*basis.eval(int(lvl[int(J_I[j,i]),0]), int(ind[int(J_I[j,i]),0]), x[int(index_I_all[l]),0])*basis.eval(int(lvl[int(J_I[j,i]),1]), int(ind[int(J_I[j,i]),1]), x[int(index_I_all[l]),1])
-    #                    #print(extension_coeffs[k,j])
-    #                    #print(sum)
-    #        extended_Bspline = bi+sum 
-    #        WEBspline = weightfunction.circle(radius,x[int(index_I_all[l])]) * extended_Bspline
-    #        #printLine()
-    #        #print(WEBspline)
-    #        A_WEB[l,i] = WEBspline
-    
-    # print(A_WEB)
-    # print(I_all.shape)
-    # print(J_relevant.shape)
-    # print(J_all.shape) 
-    # print(NN.shape)
-    # print(A_WEB.shape)
-    # print(x.shape)
-    # print(index_J_relevant.shape)
+    J_I = np.zeros((index_NN.shape[1], len(I_all)))  # x
+    for i in range(len(I_all)):#index_x
+        for j in range((index_NN.shape[1])):
+            for k in range((index_NN.shape[0])):
+                if index_x[i] == index_NN[k, j]:
+                    # print(i,index_J_relevant[j])
+                    J_I[j, i] = index_J_relevant[j]
+    #print(J_I)
     
     # Matrix A_WEB mit WEB Splines ausgewertet an inneren Punkten füllen: a_l,i = WEBspline_i(x_l) für alle i,l in innere Punkte I
     A_WEB = np.zeros((len(I_all), len(I_all)))  
@@ -413,12 +374,13 @@ for v in range(4,8):
     
     
     err = 0
-    for i in range(len(p)):
-        f = np.sin(8 * p[i,0]) + np.sin(7 * p[i,1])
-        f = f * weightfunction.circle(radius, p[i])
+    for l in range(len(p)):
+        f = np.sin(8 * p[l,0]) + np.sin(7 * p[l,1])
+        f = f * weightfunction.circle(radius, p[l])
         f_tilde = 0
-        for j in range(len(I_all)):      
-            f_tilde = f_tilde + alpha[j] * WEBspline(p, j, i)
+        for i in range(len(I_all)):      
+            f_tilde = f_tilde + alpha[i] * WEBspline(p, i, l)
+        #print(f_tilde)
         err = err + (f - f_tilde) ** 2
     err = err ** (1 / 2)
     print('error : {}'.format(err[0]))  
