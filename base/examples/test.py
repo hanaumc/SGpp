@@ -22,7 +22,7 @@ def function(x):
     f = f * weightfunction.circle(radius, x)
     return f
 
-dim = 2  # Dimension
+dim =  2  # Dimension
 radius = 0.3  # Radius von Kreis
 degree = 3  # Grad von B-Splines (nur ungerade)
 level = 4       # Level von Sparse Grid
@@ -122,6 +122,7 @@ h = np.zeros((len(x),dim))
 for i in range(len(h)):
     h[i] = 2**(-lvl[i])
 
+
 # 3D Matrix
 supp_points = np.zeros((len(J_all),(degree+2)**dim, dim))
 for l in range(len(J_all)):
@@ -134,8 +135,8 @@ for l in range(len(J_all)):
 #print(supp_points)
 
 
-# Bestimme relevante aeussere Punkte durch Auswerten der Gewichtsfunktion an den Eckpunkten.
-# Falls Gewichtsfunktion an einem Eckpunkt positiv, dann ist es relevanter aeusserer Punkt
+# Bestimme relevante aeussere Punkte durch Auswerten der Gewichtsfunktion an supp_points.
+# Falls Gewichtsfunktion an einem supp_point positiv, dann ist es relevanter aeusserer Punkt
 J_relevant = np.zeros(dim)
 eval_supp_points_circle = np.zeros(supp_points.shape[1])
 for i in range(supp_points.shape[0]):
@@ -144,7 +145,7 @@ for i in range(supp_points.shape[0]):
     if (eval_supp_points_circle > 0).any():
         J_relevant = np.vstack((J_relevant, J_all[i]))      
 J_relevant = np.delete(J_relevant, 0, 0)
-#print(J_relevant)
+print(J_relevant)
 
 # Index der relevanten aeusseren Punkte unter Gesamtpunkten x
 index_J_relevant = np.zeros(len(J_relevant))
@@ -207,7 +208,7 @@ if k == 1:
 #         for i in range(index_NN.shape[0]):
 #             NN[i,dim * j] = x[int(index_NN[i,j]),0]
 #             NN[i,dim * j +1] = x[int(index_NN[i,j]),1]
-    #print(NN)
+    print(index_NN)
 
 # Plot der nearest neighbors 
     for i in range(len(J_relevant)):
@@ -279,7 +280,7 @@ for i in range(gridStorage.getSize()):
 
 # Loese LGS und erhalte coeffs
 coeffs = np.linalg.solve(A, eval_monomials)
-print(coeffs)
+#print(coeffs)
 
 # # Beliebige Punkte im Gebiet
 # punkte = np.zeros((20, 2))
@@ -317,10 +318,6 @@ print(coeffs)
 # #    fehler = summe-(punkte[j,0]*punkte[j,1])   #coeffs[i,3], Monom x*y
 #     print(fehler)
 #     printLine()
-
-    
-    
-    
     
         
 # Test ob Loesen des LGS erfolgreich war
@@ -418,5 +415,4 @@ for l in range(len(p)):
     err = err + (f - f_tilde) ** 2
 err = err ** (1 / 2)
 print('error : {}'.format(err[0]))  
-
 

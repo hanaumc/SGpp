@@ -145,7 +145,7 @@ for i in range(supp_points.shape[0]):
     if (eval_supp_points_circle > 0).any():
         J_relevant = np.vstack((J_relevant, J_all[i]))      
 J_relevant = np.delete(J_relevant, 0, 0)
-print(J_relevant)
+#print(J_relevant)
 
 # Index der relevanten aeusseren Punkte unter Gesamtpunkten x
 index_J_relevant = np.zeros(len(J_relevant))
@@ -171,8 +171,7 @@ print("Anzahl Nearest Neighbors: {}".format(n_neighbors))
 diff = np.zeros((len(I_all), dim))
 distance = np.zeros((len(I_all), dim))
 
-print(x[18])
-print(x[15])
+
 # k=1: nearest neighbors fuer alle relevanten aeusseren Punkten
 # k=0: nearest neighbors fuer einen bestimmten relevanten aeusseren Punkt
 k = 1
@@ -257,7 +256,7 @@ if k == 1:
             for k in range(len(x)):
                 if NN[i, dim * j] == x[k, 0] and NN[i, dim * j + 1] == x[k, 1]:
                     index_NN[i, j] = k
-    print(index_NN)
+    #print(index_NN)
 
     # Nearest Neighbors sortieren nach Index im Gesamtgitter
     index_NN=np.sort(index_NN,axis=0)
@@ -265,7 +264,7 @@ if k == 1:
 #         for i in range(index_NN.shape[0]):
 #             NN[i,dim * j] = x[int(index_NN[i,j]),0]
 #             NN[i,dim * j +1] = x[int(index_NN[i,j]),1]
-    print(index_NN)
+    #print(index_NN)
 
     # Plot der nearest neighbors 
     for i in range(len(J_relevant)):
@@ -423,23 +422,6 @@ coeffs = np.linalg.solve(A, eval_monomials)
 # #    fehler = summe-(punkte[j,0]*punkte[j,1])   #coeffs[i,3], Monom x*y
 #     print(fehler)
 #     printLine()
-
-    
-#print(x[40])
-
-
-# print(x[0])
-# print(x[2])
-# print(x[5])
-# print(x[12])
-# print(x[16])
-# print(x[19])
-# print(x[26])
-# print(x[39])
-# print(x[46])
-# for i in range(len(index_I_all)):
-#     supp = basis.eval(int(lvl[index_I_all[i],0]), int(ind[index_I_all[i],0]), x[40,0])*basis.eval(int(lvl[index_I_all[i],1]), int(ind[index_I_all[i],1]), x[40,1])
-#     #print(supp)
     
         
 # Test ob Loesen des LGS erfolgreich war
@@ -467,12 +449,16 @@ for k in range(len(J_relevant)):
             coeffs_inner_NN[k,i,j] = coeffs[int(index_NN[j,k]),i]
 #print(coeffs_inner_NN)
 #print(coeffs_inner_NN.shape)
+# inv = np.linalg.inv(coeffs_inner_NN[0])
+# print(inv)
+# det = np.linalg.det(coeffs_inner_NN)
+# print(det)
 
 
 # Berechne Extensioncoefficient
 extension_coeffs = np.zeros((len(J_relevant),n_neighbors))
 for i in range(coeffs_inner_NN.shape[0]):
-    solution=np.linalg.lstsq(coeffs_inner_NN[i], coeffs_J_relevant[:,i])
+    solution=np.linalg.solve(coeffs_inner_NN[i], coeffs_J_relevant[:,i])
     extension_coeffs[i] = solution[0]
 extension_coeffs = transpose(extension_coeffs)
 #print(extension_coeffs)
@@ -509,8 +495,8 @@ for i in range(len(I_all)):
 # Zielfunktion auswerten an inneren Punkten 
 ev_f = np.zeros((len(I_all), 1))
 for i in range(len(I_all)):
-    ev_f[i] = function(x[int(index_I_all[i])])
-    #ev_f[i] = weightfunction.circle(radius,x[i])* x[i,0]**2
+    #ev_f[i] = function(x[int(index_I_all[i])])
+    ev_f[i] = weightfunction.circle(radius,x[int(index_I_all[i])])* x[i,0]**2
 #print(ev_f) 
  
 # LGS loesen fuer Interpolationskoeffizient alpha
@@ -520,8 +506,8 @@ alpha = np.linalg.solve(A_WEB, ev_f)
 # Interpolation von f und Fehlerberechnung 
 err = 0
 for l in range(len(p)):
-    f = np.sin(8 * p[l,0]) + np.sin(7 * p[l,1])
-    #f = p[l,0]**2
+    #f = np.sin(8 * p[l,0]) + np.sin(7 * p[l,1])
+    f = p[l,0]**2
     f = f * weightfunction.circle(radius, p[l])
     f_tilde = 0
     for i in range(len(I_all)):
