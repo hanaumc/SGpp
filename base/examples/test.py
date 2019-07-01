@@ -8,7 +8,8 @@ import weightfunction
 import scipy 
 from scipy import special
 from mpl_toolkits import mplot3d
-from numpy import linalg as LA, transpose
+from numpy import linalg as LA, transpose, full
+from matplotlib.pyplot import axis
 
 
 def printLine():
@@ -55,7 +56,7 @@ basis = pysgpp.SBsplineBase(degree)
 grid = pysgpp.Grid.createWEBsplineGrid(dim, degree)
 gridStorage = grid.getStorage()
 print("dimensionality:           {}".format(gridStorage.getDimension()))
-grid.getGenerator().regular(level)
+grid.getGenerator().full(level)
 print("number of grid points:    {}".format(gridStorage.getSize()))
 
 # Vektor 'x' enthaelt Koordinaten von Gitterpunkten
@@ -145,7 +146,7 @@ for i in range(supp_points.shape[0]):
     if (eval_supp_points_circle > 0).any():
         J_relevant = np.vstack((J_relevant, J_all[i]))      
 J_relevant = np.delete(J_relevant, 0, 0)
-print(J_relevant)
+#print(J_relevant)
 
 # Index der relevanten aeusseren Punkte unter Gesamtpunkten x
 index_J_relevant = np.zeros(len(J_relevant))
@@ -154,14 +155,15 @@ for i in range(len(J_relevant)):
         if J_relevant[i, 0] == x[j, 0] and J_relevant[i, 1] == x[j, 1]:
             index_J_relevant[i] = j
      
-            
+          
 
 # Plotte relevante Punkte
 plt.scatter(I_all[:, 0], I_all[:, 1], c='mediumblue', s=50, lw=0)
 plt.scatter(J_relevant[:, 0], J_relevant[:, 1], c='goldenrod', s=50, lw=0)
-#plt.scatter(x[30, 0], x[30, 1], c='cyan', s=50, lw=0)
+plt.scatter(x[index_J_relevant[10], 0], x[index_J_relevant[10], 1], c='cyan', s=50, lw=0)
+plt.scatter(x[index_I_all[25], 0], x[index_I_all[25], 1], c='red', s=50, lw=0)
 plt.axis('equal')
-#plt.show()
+plt.show()
 
 # Anzahl Nearest Neighbors
 n_neighbors = int(scipy.special.binom(degree+dim, dim))
@@ -171,46 +173,70 @@ print("Anzahl Nearest Neighbors: {}".format(n_neighbors))
 diff = np.zeros((len(I_all), dim))
 distance = np.zeros((len(I_all), dim))
 
+
+
 # k=1: nearest neighbors fuer alle relevanten aeusseren Punkten
 # k=0: nearest neighbors fuer einen bestimmten relevanten aeusseren Punkt
-k = 1
+k = 0
 if k == 1:
     NN = np.zeros((n_neighbors, dim * len(J_relevant)))
     for j in range(len(J_relevant)):
         for i in range(len(I_all)):
-            diff[i] = I_all[i] - J_relevant[j]
+            diff[i] = I_all_new[i] - J_relevant[j]
             distance[i, 0] = LA.norm(diff[i])
             distance[i, 1] = i
             sort = distance[np.argsort(distance[:, 0])]
 
-# Loesche Punkte die Anzahl Nearest Neighbor ueberschreitet
-        i = len(I_all) - 1
-        while i >= n_neighbors:
-            sort = np.delete(sort, i , 0)
-            i = i - 1 
-
-# Bestimme die Nearest Neighbor inneren Punkte 
-        for i in range(len(sort)):
-            NN[i, dim * j] = I_all[int(sort[i, 1]), 0]
-            NN[i, dim * j + 1] = I_all[int(sort[i, 1]), 1]
+        u = 0
+        while sort[u,0]==0 and sort[u,1] == 0:
+            sort = np.delete(sort, u , 0)
+        #print(sort)
         
-# Index der nearest neighbor Punkte unter allen Punkten x
+
+
+
+        # Bestimme die Nearest Neighbor inneren Punkte 
+        if len(fullsupp) == n_neighbors:    # nehme genau die Punkte mit vollem Support
+            for i in range(n_neighbors):
+                NN[i, dim * j] = fullsupp[i, 0]
+                NN[i, dim * j +1] = fullsupp[i, 1]
+        elif len(fullsupp) > n_neighbors:   # nehme die n_neighbors naehesten Punkte mit vollem Support 
+            for i in range(n_neighbors):
+                NN[i, dim * j] = fullsupp[int(sort_fullsupp[i,1]),0]
+                NN[i, dim * j + 1] = fullsupp[int(sort_fullsupp[i,1]),1]
+        elif len(fullsupp) < n_neighbors:   # nehme die Punkte mit vollem Support und ergaenze die naehesten Punkte mit Randsupport bis n_neighbors erreicht
+            i=0
+            k=0
+            while i < n_neighbors:
+                if i < len(fullsupp):
+                    NN[i, dim * j] = fullsupp[i, 0]
+                    NN[i, dim * j +1] = fullsupp[i, 1]
+                    i=i+1
+                else:
+                    NN[i, dim * j] = I_all_new[int(sort[k,1]),0]
+                    NN[i, dim *j +1] = I_all_new[int(sort[k,1]),1]
+                    k=k+1
+                    i=i+1
+    #print(NN)  
+      
+    # Index der nearest neighbor Punkte unter allen Punkten x
     index_NN = np.zeros((n_neighbors, len(J_relevant)))
     for j in range(len(J_relevant)):
         for i in range(n_neighbors):
             for k in range(len(x)):
                 if NN[i, dim * j] == x[k, 0] and NN[i, dim * j + 1] == x[k, 1]:
                     index_NN[i, j] = k
+    #print(index_NN)
 
-# Nearest Neighbors sortieren nach Index im Gesamtgitter
+    # Nearest Neighbors sortieren nach Index im Gesamtgitter
     index_NN=np.sort(index_NN,axis=0)
 #     for j in range(index_NN.shape[1]):
 #         for i in range(index_NN.shape[0]):
 #             NN[i,dim * j] = x[int(index_NN[i,j]),0]
 #             NN[i,dim * j +1] = x[int(index_NN[i,j]),1]
-    print(index_NN)
+    #print(index_NN)
 
-# Plot der nearest neighbors 
+    # Plot der nearest neighbors 
     for i in range(len(J_relevant)):
         plt.scatter(I_all[:, 0], I_all[:, 1], c='mediumblue', s=50, lw=0)
         plt.scatter(J_relevant[:, 0], J_relevant[:, 1], c='goldenrod', s=50, lw=0)
@@ -220,39 +246,39 @@ if k == 1:
         plt.axis('equal')
         #plt.show()
 else:
-    j = 0  # Setze j auf den Index des zu betrachtenden aeusseren Punktes
+    j = 10  # Setze j auf den Index des zu betrachtenden aeusseren Punktes
+    #print(J_relevant[j])
     for i in range(len(I_all)):
         diff[i] = I_all[i] - J_relevant[j]
         distance[i, 0] = LA.norm(diff[i])
         distance[i, 1] = i
         sort = distance[np.argsort(distance[:, 0])]
-    print(sort)
-
-# Loesche Punkte die Anzahl Nearest Neighbor ueberschreitet
+    
+    # Loesche Punkte die Anzahl Nearest Neighbor ueberschreitet
     i = len(I_all) - 1
     while i >= n_neighbors:
         sort = np.delete(sort, i , 0)
         i = i - 1
 
-# Bestimme die Nearest Neighbor inneren Punkte 
-    NN = np.zeros((len(sort), dim))
+    # Bestimme die Nearest Neighbor inneren Punkte 
+    NN = np.zeros(((degree+1)**2, dim))
     for i in range(len(sort)):
         NN[i] = I_all[int(sort[i, 1])]
 
-# Index der nearest neighbor Punkte unter allen Punkten x
+    # Index der nearest neighbor Punkte unter allen Punkten x
     index_NN = np.zeros(n_neighbors)
     for i in range(len(NN)):
         for k in range(len(x)):
             if NN[i, 0] == x[k, 0] and NN[i, 1] == x[k, 1]:
                 index_NN[i] = k
-                
-# Plot der nearest neighbors fuer einen Punkt aeusseren Punkt j
+                 
+    # Plot der nearest neighbors fuer einen Punkt aeusseren Punkt j
     plt.scatter(I_all[:, 0], I_all[:, 1], c='mediumblue', s=50, lw=0)
     plt.scatter(J_relevant[:, 0], J_relevant[:, 1], c='goldenrod', s=50, lw=0)
     plt.scatter(J_relevant[j, 0], J_relevant[j, 1], c='cyan', s=50, lw=0)
     plt.scatter(NN[:, 0], NN[:, 1], c='limegreen', s=50, lw=0)
     plt.axis('equal')
-    plt.show()
+    #plt.show()
 
 
 
@@ -345,12 +371,16 @@ for k in range(len(J_relevant)):
             coeffs_inner_NN[k,i,j] = coeffs[int(index_NN[j,k]),i]
 #print(coeffs_inner_NN)
 #print(coeffs_inner_NN.shape)
+# inv = np.linalg.inv(coeffs_inner_NN[0])
+# print(inv)
+# det = np.linalg.det(coeffs_inner_NN)
+# print(det)
 
 
 # Berechne Extensioncoefficient
 extension_coeffs = np.zeros((len(J_relevant),n_neighbors))
 for i in range(coeffs_inner_NN.shape[0]):
-    solution=np.linalg.lstsq(coeffs_inner_NN[i], coeffs_J_relevant[:,i])
+    solution=np.linalg.solve(coeffs_inner_NN[i], coeffs_J_relevant[:,i])
     extension_coeffs[i] = solution[0]
 extension_coeffs = transpose(extension_coeffs)
 #print(extension_coeffs)
@@ -387,32 +417,33 @@ for i in range(len(I_all)):
 # Zielfunktion auswerten an inneren Punkten 
 ev_f = np.zeros((len(I_all), 1))
 for i in range(len(I_all)):
-    ev_f[i] = function(x[int(index_I_all[i])])
-    #ev_f[i] = weightfunction.circle(radius,x[i])* x[i,0]**2
+    #ev_f[i] = function(x[int(index_I_all[i])])
+    ev_f[i] = weightfunction.circle(radius,x[int(index_I_all[i])])* x[i,0]**2
 #print(ev_f) 
  
 # LGS loesen fuer Interpolationskoeffizient alpha
 alpha = np.linalg.solve(A_WEB, ev_f)
 #print(alpha)
  
-# Interpolation von f und Fehlerberechnung 
-err = 0
-for l in range(len(p)):
-    f = np.sin(8 * p[l,0]) + np.sin(7 * p[l,1])
-    #f = p[l,0]**2
-    f = f * weightfunction.circle(radius, p[l])
-    f_tilde = 0
-    for i in range(len(I_all)):
-        bi = basis.eval(int(lvl[int(index_I_all[i]), 0]), int(ind[int(index_I_all[i]), 0]), p[l, 0]) * basis.eval(int(lvl[int(index_I_all[i]), 1]), int(ind[int(index_I_all[i]), 1]), p[l, 1])   
-        sum = 0
-        for j in range(index_NN.shape[1]):
-            for m in range(index_NN.shape[0]):
-                if index_NN[m, j] == index_I_all[i] and J_i[j, i] != 0: 
-                    sum = sum + extension_coeffs[m, j] * basis.eval(int(lvl[int(J_i[j, i]), 0]), int(ind[int(J_i[j, i]), 0]), p[l, 0]) * basis.eval(int(lvl[int(J_i[j, i]), 1]), int(ind[int(J_i[j, i]), 1]), p[l, 1])
-        extended_Bspline = bi + sum 
-        WEBspline = weightfunction.circle(radius, p[l]) * extended_Bspline      
-        f_tilde = f_tilde + alpha[i] * WEBspline
-    err = err + (f - f_tilde) ** 2
-err = err ** (1 / 2)
-print('error : {}'.format(err[0]))  
+# # Interpolation von f und Fehlerberechnung 
+# err = 0
+# for l in range(len(p)):
+#     #f = np.sin(8 * p[l,0]) + np.sin(7 * p[l,1])
+#     f = p[l,0]**2
+#     f = f * weightfunction.circle(radius, p[l])
+#     f_tilde = 0
+#     for i in range(len(I_all)):
+#         bi = basis.eval(int(lvl[int(index_I_all[i]), 0]), int(ind[int(index_I_all[i]), 0]), p[l, 0]) * basis.eval(int(lvl[int(index_I_all[i]), 1]), int(ind[int(index_I_all[i]), 1]), p[l, 1])   
+#         sum = 0
+#         for j in range(index_NN.shape[1]):
+#             for m in range(index_NN.shape[0]):
+#                 if index_NN[m, j] == index_I_all[i] and J_i[j, i] != 0: 
+#                     sum = sum + extension_coeffs[m, j] * basis.eval(int(lvl[int(J_i[j, i]), 0]), int(ind[int(J_i[j, i]), 0]), p[l, 0]) * basis.eval(int(lvl[int(J_i[j, i]), 1]), int(ind[int(J_i[j, i]), 1]), p[l, 1])
+#         extended_Bspline = bi + sum 
+#         WEBspline = weightfunction.circle(radius, p[l]) * extended_Bspline      
+#         f_tilde = f_tilde + alpha[i] * WEBspline
+#     err = err + (f - f_tilde) ** 2
+# err = err ** (1 / 2)
+# print('error : {}'.format(err[0]))  
+
 

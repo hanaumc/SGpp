@@ -249,13 +249,13 @@ if k == 1:
 #             NN[i, dim * j + 1] = I_all[int(sort[i, 1]), 1]
 #         print(NN)
 
-# Versuch zu Punkten mit vollem Traeger mit naehesten Punkten zu nehmen, wenn fullsupp zu klein.
+# Versuch zu Punkten mit vollem Traeger mit naehesten Punkten zu nehmen, wenn fullsupp zu klein. Fehler besser 
         index_delete = np.zeros(len(fullsupp))
         for i in range(len(fullsupp)):
             for k in range(len(I_all)):
                 if I_all[k,0] == fullsupp[i,0] and I_all[k,1] == fullsupp[i,1]:
                     index_delete[i] = k
-        print(index_delete)
+        #print(index_delete)
         I_all_new = np.delete(I_all, index_delete, 0)
         #print(I_all_new)
 
@@ -551,25 +551,25 @@ for i in range(len(I_all)):
 alpha = np.linalg.solve(A_WEB, ev_f)
 #print(alpha)
  
-# Interpolation von f und Fehlerberechnung 
-err = 0
-for l in range(len(p)):
-    #f = np.sin(8 * p[l,0]) + np.sin(7 * p[l,1])
-    f = p[l,0]**2
-    f = f * weightfunction.circle(radius, p[l])
-    f_tilde = 0
-    for i in range(len(I_all)):
-        bi = basis.eval(int(lvl[int(index_I_all[i]), 0]), int(ind[int(index_I_all[i]), 0]), p[l, 0]) * basis.eval(int(lvl[int(index_I_all[i]), 1]), int(ind[int(index_I_all[i]), 1]), p[l, 1])   
-        sum = 0
-        for j in range(index_NN.shape[1]):
-            for m in range(index_NN.shape[0]):
-                if index_NN[m, j] == index_I_all[i] and J_i[j, i] != 0: 
-                    sum = sum + extension_coeffs[m, j] * basis.eval(int(lvl[int(J_i[j, i]), 0]), int(ind[int(J_i[j, i]), 0]), p[l, 0]) * basis.eval(int(lvl[int(J_i[j, i]), 1]), int(ind[int(J_i[j, i]), 1]), p[l, 1])
-        extended_Bspline = bi + sum 
-        WEBspline = weightfunction.circle(radius, p[l]) * extended_Bspline      
-        f_tilde = f_tilde + alpha[i] * WEBspline
-    err = err + (f - f_tilde) ** 2
-err = err ** (1 / 2)
-print('error : {}'.format(err[0]))  
+# # Interpolation von f und Fehlerberechnung 
+# err = 0
+# for l in range(len(p)):
+#     #f = np.sin(8 * p[l,0]) + np.sin(7 * p[l,1])
+#     f = p[l,0]**2
+#     f = f * weightfunction.circle(radius, p[l])
+#     f_tilde = 0
+#     for i in range(len(I_all)):
+#         bi = basis.eval(int(lvl[int(index_I_all[i]), 0]), int(ind[int(index_I_all[i]), 0]), p[l, 0]) * basis.eval(int(lvl[int(index_I_all[i]), 1]), int(ind[int(index_I_all[i]), 1]), p[l, 1])   
+#         sum = 0
+#         for j in range(index_NN.shape[1]):
+#             for m in range(index_NN.shape[0]):
+#                 if index_NN[m, j] == index_I_all[i] and J_i[j, i] != 0: 
+#                     sum = sum + extension_coeffs[m, j] * basis.eval(int(lvl[int(J_i[j, i]), 0]), int(ind[int(J_i[j, i]), 0]), p[l, 0]) * basis.eval(int(lvl[int(J_i[j, i]), 1]), int(ind[int(J_i[j, i]), 1]), p[l, 1])
+#         extended_Bspline = bi + sum 
+#         WEBspline = weightfunction.circle(radius, p[l]) * extended_Bspline      
+#         f_tilde = f_tilde + alpha[i] * WEBspline
+#     err = err + (f - f_tilde) ** 2
+# err = err ** (1 / 2)
+# print('error : {}'.format(err[0]))  
 
 
