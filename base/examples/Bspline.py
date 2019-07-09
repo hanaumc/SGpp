@@ -5,7 +5,6 @@ import numpy as np
 import matplotlib 
 import matplotlib.pyplot as plt
 import weightfunction
-import grid
 import scipy 
 from scipy import special
 from mpl_toolkits import mplot3d

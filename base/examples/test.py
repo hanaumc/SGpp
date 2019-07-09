@@ -56,7 +56,7 @@ basis = pysgpp.SBsplineBase(degree)
 grid = pysgpp.Grid.createWEBsplineGrid(dim, degree)
 gridStorage = grid.getStorage()
 print("dimensionality:           {}".format(gridStorage.getDimension()))
-grid.getGenerator().full(level)
+grid.getGenerator().regular(level)
 print("number of grid points:    {}".format(gridStorage.getSize()))
 
 # Vektor 'x' enthaelt Koordinaten von Gitterpunkten
@@ -308,28 +308,28 @@ for i in range(gridStorage.getSize()):
 coeffs = np.linalg.solve(A, eval_monomials)
 #print(coeffs)
 
-# # Beliebige Punkte im Gebiet
-# punkte = np.zeros((20, 2))
-# counter = 0 
-# while counter < 20:
-#     z = np.random.rand(1, 2)
-#     if weightfunction.circle(radius, z[0]) > 0:
-#         punkte[counter] = z[0]
-#         counter = counter + 1
-# for j in range(punkte.shape[0]):
-#     summe = 0
-#     for i in range(len(x)):
-#         summe = summe + coeffs[i,0]*basis.eval(int(lvl[i,0]), int(ind[i,0]), punkte[j,0])*basis.eval(int(lvl[i,1]), int(ind[i,1]), punkte[j,1])
-#     print(punkte[j])
-#     print(summe)
-#     fehler = summe - 1                         #coeffs[i,0], Monom 1
-#     #    fehler = summe - punkte[j,0]                #coeffs[i,1], Monom x
-#     #    fehler = summe - punkte[j,1]               #coeffs[i,2], Monom y
-#     #    fehler = summe-(punkte[j,0]*punkte[j,1])   #coeffs[i,3], Monom x*y
-#     print(fehler)
-#     printLine()
-
-
+# Beliebige Punkte im Gebiet
+punkte = np.zeros((20, 2))
+counter = 0 
+while counter < 20:
+    z = np.random.rand(1, 2)
+    if weightfunction.circle(radius, z[0]) > 0:
+        punkte[counter] = z[0]
+        counter = counter + 1
+for j in range(punkte.shape[0]):
+    summe = 0
+    for i in range(len(x)):
+        summe = summe + coeffs[i,0]*basis.eval(int(lvl[i,0]), int(ind[i,0]), punkte[j,0])*basis.eval(int(lvl[i,1]), int(ind[i,1]), punkte[j,1])
+    print(punkte[j])
+    print(summe)
+    fehler = summe - 1                         #coeffs[i,0], Monom 1
+    #    fehler = summe - punkte[j,0]                #coeffs[i,1], Monom x
+    #    fehler = summe - punkte[j,1]               #coeffs[i,2], Monom y
+    #    fehler = summe-(punkte[j,0]*punkte[j,1])   #coeffs[i,3], Monom x*y
+    print(fehler)
+    printLine()
+ 
+ 
 # # Beliebige Punkte im Einheitsquadrat
 # punkte = np.random.rand(20,2)
 # for j in range(punkte.shape[0]):
@@ -345,105 +345,105 @@ coeffs = np.linalg.solve(A, eval_monomials)
 #     print(fehler)
 #     printLine()
     
-        
-# Test ob Loesen des LGS erfolgreich war
-error = eval_monomials - np.matmul(A, coeffs)
-error = LA.norm(error)
-if error > pow(10, -14):
-    print('failed. error > 10e-14')
-
-
-
-# Definiere Koeffizientenmatrix der aeusseren relevanten Punkte
-coeffs_J_relevant = np.zeros((len(J_relevant), size_monomials))
-for j in range(size_monomials):
-    for i in range(len(J_relevant)):
-        coeffs_J_relevant[i,j] = coeffs[int(index_J_relevant[i]),j]
-coeffs_J_relevant = transpose(coeffs_J_relevant)
-#print(coeffs_J_relevant)
-
-
-# Definiere Koeffizientenmatrix der inneren Punkte zu aeusseren Punkten 
-coeffs_inner_NN = np.zeros((len(J_relevant),size_monomials, n_neighbors))
-for k in range(len(J_relevant)):
-    for j in range(n_neighbors):
-        for i in range(size_monomials):
-            coeffs_inner_NN[k,i,j] = coeffs[int(index_NN[j,k]),i]
-#print(coeffs_inner_NN)
-#print(coeffs_inner_NN.shape)
-# inv = np.linalg.inv(coeffs_inner_NN[0])
-# print(inv)
-# det = np.linalg.det(coeffs_inner_NN)
-# print(det)
-
-
-# Berechne Extensioncoefficient
-extension_coeffs = np.zeros((len(J_relevant),n_neighbors))
-for i in range(coeffs_inner_NN.shape[0]):
-    solution=np.linalg.solve(coeffs_inner_NN[i], coeffs_J_relevant[:,i])
-    extension_coeffs[i] = solution[0]
-extension_coeffs = transpose(extension_coeffs)
-#print(extension_coeffs)
-
-# Definiere J(i) 
-J_i = np.zeros((index_NN.shape[1], len(I_all)))  # x
-for i in range(len(I_all)):#index_x
-    for j in range((index_NN.shape[1])):
-        for k in range((index_NN.shape[0])):
-            if index_x[i] == index_NN[k, j]:
-                # print(i,index_J_relevant[j])
-                J_i[j, i] = index_J_relevant[j]
-#print(J_i)
-
-# Matrix A_WEB mit WEB Splines ausgewertet an inneren Punkten fuellen: a_l,i = WEBspline_i(x_l) fuer alle i,l in innere Punkte I
-A_WEB = np.zeros((len(I_all), len(I_all)))  
-for i in range(len(I_all)):
-    k = 0
-    for l in range(len(x)):
-        if eval_circle[l] > 0:
-            bi = basis.eval(int(lvl[int(index_I_all[i]), 0]), int(ind[int(index_I_all[i]), 0]), x[l, 0]) * basis.eval(int(lvl[int(index_I_all[i]), 1]), int(ind[int(index_I_all[i]), 1]), x[l, 1])   
-            sum = 0
-            for j in range(index_NN.shape[1]):
-                for m in range(index_NN.shape[0]):
-                    if index_NN[m, j] == index_I_all[i] and J_i[j, i] != 0: 
-                        sum = sum + extension_coeffs[m, j] * basis.eval(int(lvl[int(J_i[j, i]), 0]), int(ind[int(J_i[j, i]), 0]), x[l, 0]) * basis.eval(int(lvl[int(J_i[j, i]), 1]), int(ind[int(J_i[j, i]), 1]), x[l, 1])
-            extended_Bspline = bi + sum 
-            WEBspline = weightfunction.circle(radius, x[l]) * extended_Bspline
-            A_WEB[k, i] = WEBspline
-            k = k + 1
-#print(A_WEB)
-
-
-# Zielfunktion auswerten an inneren Punkten 
-ev_f = np.zeros((len(I_all), 1))
-for i in range(len(I_all)):
-    #ev_f[i] = function(x[int(index_I_all[i])])
-    ev_f[i] = weightfunction.circle(radius,x[int(index_I_all[i])])* x[i,0]**2
-#print(ev_f) 
- 
-# LGS loesen fuer Interpolationskoeffizient alpha
-alpha = np.linalg.solve(A_WEB, ev_f)
-#print(alpha)
- 
-# # Interpolation von f und Fehlerberechnung 
-# err = 0
-# for l in range(len(p)):
-#     #f = np.sin(8 * p[l,0]) + np.sin(7 * p[l,1])
-#     f = p[l,0]**2
-#     f = f * weightfunction.circle(radius, p[l])
-#     f_tilde = 0
-#     for i in range(len(I_all)):
-#         bi = basis.eval(int(lvl[int(index_I_all[i]), 0]), int(ind[int(index_I_all[i]), 0]), p[l, 0]) * basis.eval(int(lvl[int(index_I_all[i]), 1]), int(ind[int(index_I_all[i]), 1]), p[l, 1])   
-#         sum = 0
-#         for j in range(index_NN.shape[1]):
-#             for m in range(index_NN.shape[0]):
-#                 if index_NN[m, j] == index_I_all[i] and J_i[j, i] != 0: 
-#                     sum = sum + extension_coeffs[m, j] * basis.eval(int(lvl[int(J_i[j, i]), 0]), int(ind[int(J_i[j, i]), 0]), p[l, 0]) * basis.eval(int(lvl[int(J_i[j, i]), 1]), int(ind[int(J_i[j, i]), 1]), p[l, 1])
-#         extended_Bspline = bi + sum 
-#         WEBspline = weightfunction.circle(radius, p[l]) * extended_Bspline      
-#         f_tilde = f_tilde + alpha[i] * WEBspline
-#     err = err + (f - f_tilde) ** 2
-# err = err ** (1 / 2)
-# print('error : {}'.format(err[0]))  
+#         
+# # Test ob Loesen des LGS erfolgreich war
+# error = eval_monomials - np.matmul(A, coeffs)
+# error = LA.norm(error)
+# if error > pow(10, -14):
+#     print('failed. error > 10e-14')
+# 
+# 
+# 
+# # Definiere Koeffizientenmatrix der aeusseren relevanten Punkte
+# coeffs_J_relevant = np.zeros((len(J_relevant), size_monomials))
+# for j in range(size_monomials):
+#     for i in range(len(J_relevant)):
+#         coeffs_J_relevant[i,j] = coeffs[int(index_J_relevant[i]),j]
+# coeffs_J_relevant = transpose(coeffs_J_relevant)
+# #print(coeffs_J_relevant)
+# 
+# 
+# # Definiere Koeffizientenmatrix der inneren Punkte zu aeusseren Punkten 
+# coeffs_inner_NN = np.zeros((len(J_relevant),size_monomials, n_neighbors))
+# for k in range(len(J_relevant)):
+#     for j in range(n_neighbors):
+#         for i in range(size_monomials):
+#             coeffs_inner_NN[k,i,j] = coeffs[int(index_NN[j,k]),i]
+# #print(coeffs_inner_NN)
+# #print(coeffs_inner_NN.shape)
+# # inv = np.linalg.inv(coeffs_inner_NN[0])
+# # print(inv)
+# # det = np.linalg.det(coeffs_inner_NN)
+# # print(det)
+# 
+# 
+# # Berechne Extensioncoefficient
+# extension_coeffs = np.zeros((len(J_relevant),n_neighbors))
+# for i in range(coeffs_inner_NN.shape[0]):
+#     solution=np.linalg.solve(coeffs_inner_NN[i], coeffs_J_relevant[:,i])
+#     extension_coeffs[i] = solution[0]
+# extension_coeffs = transpose(extension_coeffs)
+# #print(extension_coeffs)
+# 
+# # Definiere J(i) 
+# J_i = np.zeros((index_NN.shape[1], len(I_all)))  # x
+# for i in range(len(I_all)):#index_x
+#     for j in range((index_NN.shape[1])):
+#         for k in range((index_NN.shape[0])):
+#             if index_x[i] == index_NN[k, j]:
+#                 # print(i,index_J_relevant[j])
+#                 J_i[j, i] = index_J_relevant[j]
+# #print(J_i)
+# 
+# # Matrix A_WEB mit WEB Splines ausgewertet an inneren Punkten fuellen: a_l,i = WEBspline_i(x_l) fuer alle i,l in innere Punkte I
+# A_WEB = np.zeros((len(I_all), len(I_all)))  
+# for i in range(len(I_all)):
+#     k = 0
+#     for l in range(len(x)):
+#         if eval_circle[l] > 0:
+#             bi = basis.eval(int(lvl[int(index_I_all[i]), 0]), int(ind[int(index_I_all[i]), 0]), x[l, 0]) * basis.eval(int(lvl[int(index_I_all[i]), 1]), int(ind[int(index_I_all[i]), 1]), x[l, 1])   
+#             sum = 0
+#             for j in range(index_NN.shape[1]):
+#                 for m in range(index_NN.shape[0]):
+#                     if index_NN[m, j] == index_I_all[i] and J_i[j, i] != 0: 
+#                         sum = sum + extension_coeffs[m, j] * basis.eval(int(lvl[int(J_i[j, i]), 0]), int(ind[int(J_i[j, i]), 0]), x[l, 0]) * basis.eval(int(lvl[int(J_i[j, i]), 1]), int(ind[int(J_i[j, i]), 1]), x[l, 1])
+#             extended_Bspline = bi + sum 
+#             WEBspline = weightfunction.circle(radius, x[l]) * extended_Bspline
+#             A_WEB[k, i] = WEBspline
+#             k = k + 1
+# #print(A_WEB)
+# 
+# 
+# # Zielfunktion auswerten an inneren Punkten 
+# ev_f = np.zeros((len(I_all), 1))
+# for i in range(len(I_all)):
+#     #ev_f[i] = function(x[int(index_I_all[i])])
+#     ev_f[i] = weightfunction.circle(radius,x[int(index_I_all[i])])* x[i,0]**2
+# #print(ev_f) 
+#  
+# # LGS loesen fuer Interpolationskoeffizient alpha
+# alpha = np.linalg.solve(A_WEB, ev_f)
+# #print(alpha)
+#  
+# # # Interpolation von f und Fehlerberechnung 
+# # err = 0
+# # for l in range(len(p)):
+# #     #f = np.sin(8 * p[l,0]) + np.sin(7 * p[l,1])
+# #     f = p[l,0]**2
+# #     f = f * weightfunction.circle(radius, p[l])
+# #     f_tilde = 0
+# #     for i in range(len(I_all)):
+# #         bi = basis.eval(int(lvl[int(index_I_all[i]), 0]), int(ind[int(index_I_all[i]), 0]), p[l, 0]) * basis.eval(int(lvl[int(index_I_all[i]), 1]), int(ind[int(index_I_all[i]), 1]), p[l, 1])   
+# #         sum = 0
+# #         for j in range(index_NN.shape[1]):
+# #             for m in range(index_NN.shape[0]):
+# #                 if index_NN[m, j] == index_I_all[i] and J_i[j, i] != 0: 
+# #                     sum = sum + extension_coeffs[m, j] * basis.eval(int(lvl[int(J_i[j, i]), 0]), int(ind[int(J_i[j, i]), 0]), p[l, 0]) * basis.eval(int(lvl[int(J_i[j, i]), 1]), int(ind[int(J_i[j, i]), 1]), p[l, 1])
+# #         extended_Bspline = bi + sum 
+# #         WEBspline = weightfunction.circle(radius, p[l]) * extended_Bspline      
+# #         f_tilde = f_tilde + alpha[i] * WEBspline
+# #     err = err + (f - f_tilde) ** 2
+# # err = err ** (1 / 2)
+# # print('error : {}'.format(err[0]))  
 
 
