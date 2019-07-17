@@ -137,14 +137,60 @@ for k in range(2**level_y+degree+1+1):
 # Index von Bspline auf Knotenfolge
 index_Bspline_x = np.arange(0, 1/h_x+1, 1)
 index_Bspline_y = np.arange(0, 1/h_y+1, 1)
+
 print(xi)
-print(index_Bspline_x)
+
+#print(xi[0])
+for i in range(len(xi)):
+    print(Bspline.evalBspline(degree, 0, xi, xi[i] ))
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+# Index (x,y) der Bsplines mit Knotenmittelpunkt im inneren des Gebiets
+
+grid_Bspline = np.meshgrid(xi,yi)
+#print(grid_Bspline)
+
+
+
+
+
+
+grid_Bsplines = np.meshgrid(xi,yi)
+index_inner_Bspline = np.zeros((1, dim))
+for i in range(len(xi)):
+    for j in range(len(yi)):
+        if weightfunction.circle(radius, [grid_Bsplines[0][j,i], grid_Bsplines[1][j,i]]) > 0:
+            index_inner_Bspline = np.append(index_inner_Bspline, [[i-(degree+1)/2,j-(degree+1)/2]], axis = 0)
+index_inner_Bspline = np.delete(index_inner_Bspline, 0, 0)
+#print(index_inner_Bspline) 
+ 
 # Definiere Gitter 
 x = np.arange(0, 1+h_x, h_x)
 y = np.arange(0, 1+h_y, h_y)
 grid = np.meshgrid(x,y)
+
+
+
+
+# Index der Gitterpunkte  
+# k=0
+# index_gp = np.zeros((len(xi)*len(yi), dim))
+# for i in range(1,len(x)+1):
+#     for j in range(1, len(x+1))
+
+
 
 # Definiere Gitterpunkte als Vektor
 k=0
@@ -153,6 +199,8 @@ for i in range(len(x)):
     for j in range(len(y)):
          gp[k] = [grid[0][j,i], grid[1][j,i]]
          k=k+1
+
+
 
 print("dimensionality:           {}".format(dim))
 print("level:                    {}".format((level_x, level_y)))
@@ -171,6 +219,7 @@ for i in range(len(x)):
             J_all = np.vstack((J_all, [grid[0][j,i], grid[1][j,i]]))
 I_all = np.delete(I_all, 0, 0)
 J_all = np.delete(J_all, 0, 0)
+
 
 # Plot von inneren und aeusseren Punkten 
 plt.scatter(grid[0], grid[1], c='crimson', s=50, lw=0)
@@ -206,6 +255,7 @@ for i in range(len(J_relevant)):
         if J_relevant[i, 0] == gp[j, 0] and J_relevant[i, 1] == gp[j, 1]:
             index_J_relevant[i] = j
 #print(index_J_relevant)
+
 
 # Plot von inneren, aeusseren und relevanten aeusseren Punkten
 plt.scatter(grid[0], grid[1], c='crimson', s=50, lw=0)
@@ -322,7 +372,7 @@ for i in range(len(J_relevant)):
     plt.axis('equal')
     #plt.show()        
 
-#print(coeffs)
+
                        
 # Definiere Koeffizientenmatrix der aeusseren relevanten Punkte
 coeffs_J_relevant = np.zeros((len(J_relevant),1, size_monomials))
@@ -347,7 +397,7 @@ extension_coeffs = np.zeros((len(J_relevant), size_monomials, 1))
 
 for i in range(coeffs_NN.shape[0]):
     extension_coeffs[i] = np.linalg.solve(coeffs_NN[i], coeffs_J_relevant[i])
-#print(extension_coeffs)
+#print(extension_coeffs.shape)
 
        
 # Definiere J(i) 
@@ -368,6 +418,12 @@ for k in range(len(I_all)):
             if NN[i,j,0] == I_all[k,0] and NN[i,j,1] == I_all[k,1]:
                 J_i = np.append(J_i,i)
     J_i = np.delete(J_i,0)
+    #print(J_i)
+    
+
+
+
+
     
 # Beliebige Punkte im Gebiet
 anzahl = 20

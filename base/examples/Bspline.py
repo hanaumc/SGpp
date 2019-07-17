@@ -30,9 +30,6 @@ def evalBspline(n, k, xi, x):
 
 
 
-
-
-
 def B(x, k, i, t):
     if k == 0:
         return 1.0 if t[i] <= x < t[i+1] else 0.0
