@@ -86,9 +86,9 @@ def NNsearch(sort, j, q):
 
 dim = 2         # Dimension
 radius = 0.4    # Radius von Kreis
-degree = 3      # Grad von B-Splines (nur ungerade)
-level_x = 3    # Level in x Richtung    
-level_y = 3     # Level in y Richtung
+degree = 1      # Grad von B-Splines (nur ungerade)
+level_x = 4    # Level in x Richtung    
+level_y = 4     # Level in y Richtung
 
 # Pruefe ob Level hoch genug
 if level_x and level_y < np.log2(degree+1):
@@ -111,7 +111,7 @@ h_y = 2**(-level_y)
 
 # Definiere Knotenfolge
  
-# # Uniform
+# Uniform
 # xi = np.arange(-(degree+1)/2, 1/h_x+(degree+1)/2+1, 1)*h_x
 # yi = np.arange(-(degree+1)/2, 1/h_y+(degree+1)/2+1, 1)*h_y
 
@@ -124,7 +124,7 @@ for k in range(2**level_x+degree+1+1):
         xi[k] = ((k+(degree-1)/2)-degree)*h_x
     elif k in range(2**level_x+1, 2**level_x+degree+1+1):
         xi[k] = ((k+degree-1)-degree)*h_x
-          
+           
 yi = np.zeros(2**level_y+degree+1+1)
 for k in range(2**level_y+degree+1+1):
     if k in range(degree+1):
@@ -133,48 +133,64 @@ for k in range(2**level_y+degree+1+1):
         yi[k] = ((k+(degree-1)/2)-degree)*h_y
     elif k in range(2**level_y+1, 2**level_y+degree+1+1):
         yi[k] = ((k+degree-1)-degree)*h_y   
+        
+
 
 # Index von Bspline auf Knotenfolge
-index_Bspline_x = np.arange(0, 1/h_x+1, 1)
-index_Bspline_y = np.arange(0, 1/h_y+1, 1)
+index_Bspline_x = np.arange(-(degree-1)/2, (2*level_x**2-degree+3)/2, 1)
+index_Bspline_y = np.arange(-(degree-1)/2, (2*level_y**2-degree+3)/2, 1)
 
 print(xi)
 
-#print(xi[0])
-for i in range(len(xi)):
-    print(Bspline.evalBspline(degree, 0, xi, xi[i] ))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # Index (x,y) der Bsplines mit Knotenmittelpunkt im inneren des Gebiets
+index_inner_Bsplines = np.zeros(dim)
+index_outer_Bsplines = np.zeros(dim)
 
-grid_Bspline = np.meshgrid(xi,yi)
-#print(grid_Bspline)
-
-
-
-
-
-
-grid_Bsplines = np.meshgrid(xi,yi)
-index_inner_Bspline = np.zeros((1, dim))
 for i in range(len(xi)):
     for j in range(len(yi)):
-        if weightfunction.circle(radius, [grid_Bsplines[0][j,i], grid_Bsplines[1][j,i]]) > 0:
-            index_inner_Bspline = np.append(index_inner_Bspline, [[i-(degree+1)/2,j-(degree+1)/2]], axis = 0)
-index_inner_Bspline = np.delete(index_inner_Bspline, 0, 0)
-#print(index_inner_Bspline) 
+        if weightfunction.circle(radius,[xi[i],yi[j]]) > 0:
+            index_inner_Bsplines = np.vstack((index_inner_Bsplines, [i-degree,j-degree]))
+        elif xi[i] >= 0 and yi[j] >= 0 and xi[i] <= 1 and yi[j] <= 1:
+            index_outer_Bsplines = np.vstack((index_outer_Bsplines, [i-degree, j-degree]))
+index_inner_Bsplines = np.delete(index_inner_Bsplines, 0, 0)
+index_outer_Bsplines = np.delete(index_outer_Bsplines, 0, 0)
+print(index_inner_Bsplines)
+printLine()
+print(index_outer_Bsplines)
+    
+
+
+
+
+
+a = np.meshgrid(xi,yi)
+plt.scatter(a[0],a[1])
+plt.show()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# grid_Bsplines = np.meshgrid(xi,yi)
+# index_inner_Bspline = np.zeros((1, dim))
+# for i in range(len(xi)):
+#     for j in range(len(yi)):
+#         if weightfunction.circle(radius, [grid_Bsplines[0][j,i], grid_Bsplines[1][j,i]]) > 0:
+#             index_inner_Bspline = np.append(index_inner_Bspline, [[i-(degree+1)/2,j-(degree+1)/2]], axis = 0)
+# index_inner_Bspline = np.delete(index_inner_Bspline, 0, 0)
+# print(index_inner_Bspline) 
  
 # Definiere Gitter 
 x = np.arange(0, 1+h_x, h_x)
@@ -206,6 +222,11 @@ print("dimensionality:           {}".format(dim))
 print("level:                    {}".format((level_x, level_y)))
 print("number of grid points:    {}".format(len(x)*len(y)))
 
+# Index der inneren Bsplines, d.h. Knotenmittelpunkt im inneren des Gebiets
+# index_inner_Bsplines = np.zeros((dim))
+# index_outer_Bsplines = np.zeros((dim))
+
+
 # Auswerten von Gewichtsfunktion an Gitterpunkten und Unterteilung in innere und aeussere Punkte
 I_all = np.zeros((dim))
 J_all = np.zeros((dim))
@@ -214,14 +235,23 @@ for i in range(len(x)):
     for j in range(len(y)):
         eval_grid[i,j] = weightfunction.circle(radius, [grid[0][j,i], grid[1][j,i]])
         if eval_grid[i,j] > 0:
+            #index_inner_Bsplines = np.vstack((index_inner_Bsplines, [i,j]))
             I_all = np.vstack((I_all, [grid[0][j,i], grid[1][j,i]]))
         else:
+            #index_outer_Bsplines = np.vstack((index_outer_Bsplines, [i,j]))
             J_all = np.vstack((J_all, [grid[0][j,i], grid[1][j,i]]))
+# index_inner_Bsplines =  np.delete(index_inner_Bsplines, 0, 0)
+# index_outer_Bsplines =  np.delete(index_outer_Bsplines, 0, 0)
 I_all = np.delete(I_all, 0, 0)
 J_all = np.delete(J_all, 0, 0)
+# print(index_inner_Bsplines)
+# printLine()
+# print(index_outer_Bsplines)
 
 
-# Plot von inneren und aeusseren Punkten 
+
+
+# Plot von inneren und aeusseren Punkten
 plt.scatter(grid[0], grid[1], c='crimson', s=50, lw=0)
 plt.scatter(I_all[:,0], I_all[:,1], c='mediumblue', s=50, lw=0)
 #plt.show()
@@ -273,174 +303,158 @@ for j in range(degree + 1):
         eval_monomials[k] = (pow(gp[:, 0], i) * pow(gp[:, 1], j))
         k = k + 1   
 eval_monomials = np.transpose(eval_monomials)
- 
+   
 # Aufstellen der Interpolationsmatrix A_ij = b_j(x_i)
-A = np.zeros((len(index_Bspline_x)*len(index_Bspline_y), len(gp)))
-for l in range(len(gp)):
-    k=0
-    for i in range(len(index_Bspline_x)):
-        for j in range(len(index_Bspline_y)):
-            A[l,k] = Bspline.evalBspline(degree, i, xi, gp[l,0]) * Bspline.evalBspline(degree, j, yi, gp[l,1])
-            k=k+1        
-#print(A)
-     
-# Loese LGS und erhalte coeffs
-coeffs = np.linalg.solve(A, eval_monomials)
-#print(coeffs)
- 
-# Test ob Loesen des LGS erfolgreich war
-error = eval_monomials - np.matmul(A, coeffs)
-error = LA.norm(error)
-if error > pow(10, -14):
-    print('failed. error > 10e-14')
-
-
-k=1
-if k == 0:
-    # Nearest Neighbors nach Abstand
-    distance = np.zeros((len(I_all), dim))
-    NN = np.zeros((len(J_relevant), n_neighbors, dim))
-    for j in range(len(J_relevant)):
-        for i in range(len(I_all)):
-            diff = I_all[i] - J_relevant[j]
-            distance[i, 0] = LA.norm(diff)
-            distance[i, 1] = i
-            sort = distance[np.argsort(distance[:, 0])]
-    # Loesche Punkte die Anzahl Nearest Neighbor ueberschreitet
-        i = len(I_all) - 1
-        while i >= n_neighbors:
-            sort = np.delete(sort, i , 0)
-            i = i - 1
-    # Bestimme die Nearest Neighbor inneren Punkte
-        for i in range(len(sort)):
-            NN[j,i] = I_all[int(sort[i,1])]
-               
-    # Index der nearest neighbor Punkte unter allen Punkten x
-    index_NN = np.zeros((len(J_relevant), n_neighbors))
-    for j in range(NN.shape[0]):
-        for i in range(NN.shape[1]):
-            for k in range(len(gp)):
-                if NN[j, i, 0] == gp[k,0] and NN[j, i, 1] == gp[k,1]:
-                    index_NN[j, i] = k
-    
-    # Nearest Neighbors sortieren nach Index im Gesamtgitter
-    index_NN=np.sort(index_NN,axis=1)
-    
-    
-    # Plot der nearest neighbors 
-    for i in range(len(J_relevant)):
-        plt.scatter(I_all[:, 0], I_all[:, 1], c='mediumblue', s=50, lw=0)
-        plt.scatter(J_relevant[:, 0], J_relevant[:, 1], c='goldenrod', s=50, lw=0)
-        plt.scatter(J_relevant[i, 0], J_relevant[i, 1], c='cyan', s=50, lw=0) 
-        plt.scatter(NN[i,:,0], NN[i, :, 1], c='limegreen', s=50, lw=0)
-        plt.contour(X[0], X[1], Z, 0)
-        plt.axis('equal')
-        #plt.show()
-                
-elif k == 1:
-    # Nearest Neighbors mit naehestem (n+1)x(n+1) Block
-    distance = np.zeros((len(I_all), dim))
-    NN = np.zeros((len(J_relevant), n_neighbors, dim))
-    for j in range(len(J_relevant)):
-        for i in range(len(I_all)):
-            diff = I_all[i] - J_relevant[j]
-            distance[i, 0] = LA.norm(diff)
-            distance[i, 1] = i
-            sort = distance[np.argsort(distance[:, 0])]
-        NNsearch(sort, j, 0)
-    NN=NN
-        
-    index_NN = np.zeros((len(J_relevant), n_neighbors))
-    for j in range(NN.shape[0]):
-        for i in range(NN.shape[1]):
-            for k in range(len(gp)):
-                if NN[j, i, 0] == gp[k,0] and NN[j, i, 1] == gp[k,1]:
-                    index_NN[j, i] = k
-     
-    # Nearest Neighbors sortieren nach Index im Gesamtgitter
-    #index_NN=np.sort(index_NN,axis=1)
-    #print(index_NN)
-
-
-# Plot der nearest neighbors 
-for i in range(len(J_relevant)):
-    plt.scatter(I_all[:, 0], I_all[:, 1], c='mediumblue', s=50, lw=0)
-    plt.scatter(J_relevant[:, 0], J_relevant[:, 1], c='goldenrod', s=50, lw=0)
-    plt.scatter(J_relevant[i, 0], J_relevant[i, 1], c='cyan', s=50, lw=0) 
-    plt.scatter(NN[i,:,0], NN[i, :, 1], c='limegreen', s=50, lw=0)
-    plt.contour(X[0], X[1], Z, 0)
-    plt.axis('equal')
-    #plt.show()        
-
-
-                       
-# Definiere Koeffizientenmatrix der aeusseren relevanten Punkte
-coeffs_J_relevant = np.zeros((len(J_relevant),1, size_monomials))
-for i in range(len(J_relevant)):
-    coeffs_J_relevant[i] = coeffs[int(index_J_relevant[i])]
-coeffs_J_relevant = np.transpose(coeffs_J_relevant, [0,2,1])
-#print(coeffs_J_relevant)
-         
-
-# # Definiere Koeffizientenmatrix der nearest neighbors
-coeffs_NN = np.zeros((len(J_relevant),n_neighbors, size_monomials))
-for j in range(len(J_relevant)):
-    for i in range(n_neighbors):
-        coeffs_NN[j,i] = coeffs[int(index_NN[j, i])]
-coeffs_NN = np.transpose(coeffs_NN, [0,2,1])
-#print(coeffs_NN)     
-
-# det = np.linalg.det(coeffs_NN)
-# print(det) 
-
-extension_coeffs = np.zeros((len(J_relevant), size_monomials, 1))
-
-for i in range(coeffs_NN.shape[0]):
-    extension_coeffs[i] = np.linalg.solve(coeffs_NN[i], coeffs_J_relevant[i])
-#print(extension_coeffs.shape)
-
-       
-# Definiere J(i) 
-# J_i = np.zeros((index_NN.shape[1], len(I_all)))  # x
-# for i in range(len(I_all)):#index_x
-#     for j in range((index_NN.shape[1])):
-#         for k in range((index_NN.shape[0])):
-#             if index_gp[i] == index_NN[k, j]:
-#                 # print(i,index_J_relevant[j])
-#                 J_i[j, i] = index_J_relevant[j]
-# print(J_i)       
-
-# Index der aeusseren Punkte unter den relevanten auesseren Punkten
-for k in range(len(I_all)):
-    J_i = np.zeros(1)
-    for i in range(NN.shape[0]):
-        for j in range(NN.shape[1]):
-            if NN[i,j,0] == I_all[k,0] and NN[i,j,1] == I_all[k,1]:
-                J_i = np.append(J_i,i)
-    J_i = np.delete(J_i,0)
-    #print(J_i)
-    
-
-
-
-
-    
-# Beliebige Punkte im Gebiet
-anzahl = 20
-punkte = np.zeros((anzahl, 2))
-counter = 0 
-while counter < anzahl:
-    z = np.random.rand(1, 2)
-    if weightfunction.circle(radius, z[0]) > 0:
-        punkte[counter] = z[0]
-        counter = counter + 1
-        
-
-
-
-
-
-
+# A = np.zeros((len(index_Bspline_x)*len(index_Bspline_y), len(gp)))
+# for l in range(len(gp)):
+#     k=0
+#     for i in range(len(index_Bspline_x)):
+#         for j in range(len(index_Bspline_y)):
+#             A[l,k] = Bspline.evalBspline(degree, i, xi, gp[l,0]) * Bspline.evalBspline(degree, j, yi, gp[l,1])
+#             k=k+1        
+# print(A)
+#      
+# # Loese LGS und erhalte coeffs
+# coeffs = np.linalg.solve(A, eval_monomials)
+# #print(coeffs)
+#  
+# # Test ob Loesen des LGS erfolgreich war
+# error = eval_monomials - np.matmul(A, coeffs)
+# error = LA.norm(error)
+# if error > pow(10, -14):
+#     print('failed. error > 10e-14')
+# 
+# 
+# k=1
+# if k == 0:
+#     # Nearest Neighbors nach Abstand
+#     distance = np.zeros((len(I_all), dim))
+#     NN = np.zeros((len(J_relevant), n_neighbors, dim))
+#     for j in range(len(J_relevant)):
+#         for i in range(len(I_all)):
+#             diff = I_all[i] - J_relevant[j]
+#             distance[i, 0] = LA.norm(diff)
+#             distance[i, 1] = i
+#             sort = distance[np.argsort(distance[:, 0])]
+#     # Loesche Punkte die Anzahl Nearest Neighbor ueberschreitet
+#         i = len(I_all) - 1
+#         while i >= n_neighbors:
+#             sort = np.delete(sort, i , 0)
+#             i = i - 1
+#     # Bestimme die Nearest Neighbor inneren Punkte
+#         for i in range(len(sort)):
+#             NN[j,i] = I_all[int(sort[i,1])]
+#                
+#     # Index der nearest neighbor Punkte unter allen Punkten x
+#     index_NN = np.zeros((len(J_relevant), n_neighbors))
+#     for j in range(NN.shape[0]):
+#         for i in range(NN.shape[1]):
+#             for k in range(len(gp)):
+#                 if NN[j, i, 0] == gp[k,0] and NN[j, i, 1] == gp[k,1]:
+#                     index_NN[j, i] = k
+#     
+#     # Nearest Neighbors sortieren nach Index im Gesamtgitter
+#     index_NN=np.sort(index_NN,axis=1)
+#     
+#     
+#     # Plot der nearest neighbors 
+#     for i in range(len(J_relevant)):
+#         plt.scatter(I_all[:, 0], I_all[:, 1], c='mediumblue', s=50, lw=0)
+#         plt.scatter(J_relevant[:, 0], J_relevant[:, 1], c='goldenrod', s=50, lw=0)
+#         plt.scatter(J_relevant[i, 0], J_relevant[i, 1], c='cyan', s=50, lw=0) 
+#         plt.scatter(NN[i,:,0], NN[i, :, 1], c='limegreen', s=50, lw=0)
+#         plt.contour(X[0], X[1], Z, 0)
+#         plt.axis('equal')
+#         #plt.show()
+#                 
+# elif k == 1:
+#     # Nearest Neighbors mit naehestem (n+1)x(n+1) Block
+#     distance = np.zeros((len(I_all), dim))
+#     NN = np.zeros((len(J_relevant), n_neighbors, dim))
+#     for j in range(len(J_relevant)):
+#         for i in range(len(I_all)):
+#             diff = I_all[i] - J_relevant[j]
+#             distance[i, 0] = LA.norm(diff)
+#             distance[i, 1] = i
+#             sort = distance[np.argsort(distance[:, 0])]
+#         NNsearch(sort, j, 0)
+#     NN=NN
+#         
+#     index_NN = np.zeros((len(J_relevant), n_neighbors))
+#     for j in range(NN.shape[0]):
+#         for i in range(NN.shape[1]):
+#             for k in range(len(gp)):
+#                 if NN[j, i, 0] == gp[k,0] and NN[j, i, 1] == gp[k,1]:
+#                     index_NN[j, i] = k
+#      
+#     # Nearest Neighbors sortieren nach Index im Gesamtgitter
+#     #index_NN=np.sort(index_NN,axis=1)
+#     #print(index_NN)
+# 
+# 
+# # Plot der nearest neighbors 
+# for i in range(len(J_relevant)):
+#     plt.scatter(I_all[:, 0], I_all[:, 1], c='mediumblue', s=50, lw=0)
+#     plt.scatter(J_relevant[:, 0], J_relevant[:, 1], c='goldenrod', s=50, lw=0)
+#     plt.scatter(J_relevant[i, 0], J_relevant[i, 1], c='cyan', s=50, lw=0) 
+#     plt.scatter(NN[i,:,0], NN[i, :, 1], c='limegreen', s=50, lw=0)
+#     plt.contour(X[0], X[1], Z, 0)
+#     plt.axis('equal')
+#     #plt.show()        
+# 
+# 
+#                        
+# # Definiere Koeffizientenmatrix der aeusseren relevanten Punkte
+# coeffs_J_relevant = np.zeros((len(J_relevant),1, size_monomials))
+# for i in range(len(J_relevant)):
+#     coeffs_J_relevant[i] = coeffs[int(index_J_relevant[i])]
+# coeffs_J_relevant = np.transpose(coeffs_J_relevant, [0,2,1])
+# #print(coeffs_J_relevant)
+#          
+# 
+# # # Definiere Koeffizientenmatrix der nearest neighbors
+# coeffs_NN = np.zeros((len(J_relevant),n_neighbors, size_monomials))
+# for j in range(len(J_relevant)):
+#     for i in range(n_neighbors):
+#         coeffs_NN[j,i] = coeffs[int(index_NN[j, i])]
+# coeffs_NN = np.transpose(coeffs_NN, [0,2,1])
+# #print(coeffs_NN)     
+# 
+# # det = np.linalg.det(coeffs_NN)
+# # print(det) 
+# 
+# extension_coeffs = np.zeros((len(J_relevant), size_monomials, 1))
+# 
+# for i in range(coeffs_NN.shape[0]):
+#     extension_coeffs[i] = np.linalg.solve(coeffs_NN[i], coeffs_J_relevant[i])
+# #print(extension_coeffs.shape)
+# 
+#        
+# # Definiere J(i) 
+# # J_i = np.zeros((index_NN.shape[1], len(I_all)))  # x
+# # for i in range(len(I_all)):#index_x
+# #     for j in range((index_NN.shape[1])):
+# #         for k in range((index_NN.shape[0])):
+# #             if index_gp[i] == index_NN[k, j]:
+# #                 # print(i,index_J_relevant[j])
+# #                 J_i[j, i] = index_J_relevant[j]
+# # print(J_i)       
+# 
+# # Index der aeusseren Punkte unter den relevanten auesseren Punkten
+# for k in range(len(I_all)):
+#     J_i = np.zeros(1)
+#     for i in range(NN.shape[0]):
+#         for j in range(NN.shape[1]):
+#             if NN[i,j,0] == I_all[k,0] and NN[i,j,1] == I_all[k,1]:
+#                 J_i = np.append(J_i,i)
+#     J_i = np.delete(J_i,0)
+#     #print(J_i)
+#     
+# 
+# 
+# 
+# 
+#     
 # # Beliebige Punkte im Gebiet
 # anzahl = 20
 # punkte = np.zeros((anzahl, 2))
@@ -450,26 +464,42 @@ while counter < anzahl:
 #     if weightfunction.circle(radius, z[0]) > 0:
 #         punkte[counter] = z[0]
 #         counter = counter + 1
+#         
+# 
+# 
+# 
+# 
+# 
+# 
+# # # Beliebige Punkte im Gebiet
+# # anzahl = 20
+# # punkte = np.zeros((anzahl, 2))
+# # counter = 0 
+# # while counter < anzahl:
+# #     z = np.random.rand(1, 2)
+# #     if weightfunction.circle(radius, z[0]) > 0:
+# #         punkte[counter] = z[0]
+# #         counter = counter + 1
+# #   
+# # # Fehler zu Monomen bestimmen
+# # L2fehler = 0
+# # for k in range(len(punkte)):
+# #     summe = 0 
+# #     c = 0
+# #     for i in range(len(index_Bspline_x)):
+# #         for j in range(len(index_Bspline_y)):
+# #             summe = summe + coeffs[c,1] * Bspline.evalBspline(degree, i, xi, punkte[k,0]) * Bspline.evalBspline(degree, j, yi, punkte[k,1])
+# #             c=c+1
+# #     #fehler = summe - 1                         #coeffs[c,0], Monom 1                    
+# #     fehler = summe - punkte[k,0]               #coeffs[c,1], Monom x
+# #     #fehler = summe - punkte[k,0]**2
+# #     #fehler = summe - punkte[k,0]**3
+# #     #fehler = summe - punkte[k,0]*punkte[k,1]
+# #     #fehler = summe - punkte[k,1]               #coeffs[c,2], Monom y
+# #     #fehler = summe-(punkte[k,0]*punkte[k,1])    #coeffs[c,3], Monom x*y
+# #     L2fehler = L2fehler + fehler**2
+# # L2fehler = np.sqrt(L2fehler) 
+# # print(L2fehler)
+# # printLine()
 #   
-# # Fehler zu Monomen bestimmen
-# L2fehler = 0
-# for k in range(len(punkte)):
-#     summe = 0 
-#     c = 0
-#     for i in range(len(index_Bspline_x)):
-#         for j in range(len(index_Bspline_y)):
-#             summe = summe + coeffs[c,1] * Bspline.evalBspline(degree, i, xi, punkte[k,0]) * Bspline.evalBspline(degree, j, yi, punkte[k,1])
-#             c=c+1
-#     #fehler = summe - 1                         #coeffs[c,0], Monom 1                    
-#     fehler = summe - punkte[k,0]               #coeffs[c,1], Monom x
-#     #fehler = summe - punkte[k,0]**2
-#     #fehler = summe - punkte[k,0]**3
-#     #fehler = summe - punkte[k,0]*punkte[k,1]
-#     #fehler = summe - punkte[k,1]               #coeffs[c,2], Monom y
-#     #fehler = summe-(punkte[k,0]*punkte[k,1])    #coeffs[c,3], Monom x*y
-#     L2fehler = L2fehler + fehler**2
-# L2fehler = np.sqrt(L2fehler) 
-# print(L2fehler)
-# printLine()
-  
   

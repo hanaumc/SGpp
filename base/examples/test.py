@@ -100,7 +100,7 @@ for i in range(len(eval_circle)):
 plt.scatter(I_all[:, 0], I_all[:, 1], c='mediumblue', s=50, lw=0)
 plt.scatter(J_all[:, 0], J_all[:, 1], c='crimson', s=50, lw=0)
 plt.axis('equal')
-#plt.show()
+plt.show()
 
 # Index der inneren Punkte unter Gesamtpunkten x
 index_I_all = np.zeros(len(I_all))
