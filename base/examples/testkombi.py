@@ -86,9 +86,9 @@ def NNsearch(sort, j, q):
 
 dim = 2         # Dimension
 radius = 0.4    # Radius von Kreis
-degree = 1      # Grad von B-Splines (nur ungerade)
-level_x = 4    # Level in x Richtung    
-level_y = 4     # Level in y Richtung
+degree = 3      # Grad von B-Splines (nur ungerade)
+level_x = 3    # Level in x Richtung    
+level_y = 3     # Level in y Richtung
 
 # Pruefe ob Level hoch genug
 if level_x and level_y < np.log2(degree+1):
@@ -137,29 +137,46 @@ for k in range(2**level_y+degree+1+1):
 
 
 # Index von Bspline auf Knotenfolge
-index_Bspline_x = np.arange(-(degree-1)/2, (2*level_x**2-degree+3)/2, 1)
-index_Bspline_y = np.arange(-(degree-1)/2, (2*level_y**2-degree+3)/2, 1)
-
+index_Bspline_x = np.arange(-(degree-1)/2, level_x**2-(degree+1)/2+1, 1)
+index_Bspline_y = np.arange(-(degree-1)/2, level_y**2-(degree+1)/2+1, 1)
+print(index_Bspline_x)
 print(xi)
 
 # Index (x,y) der Bsplines mit Knotenmittelpunkt im inneren des Gebiets
 index_inner_Bsplines = np.zeros(dim)
 index_outer_Bsplines = np.zeros(dim)
 
-for i in range(len(xi)):
-    for j in range(len(yi)):
-        if weightfunction.circle(radius,[xi[i],yi[j]]) > 0:
-            index_inner_Bsplines = np.vstack((index_inner_Bsplines, [i-degree,j-degree]))
-        elif xi[i] >= 0 and yi[j] >= 0 and xi[i] <= 1 and yi[j] <= 1:
-            index_outer_Bsplines = np.vstack((index_outer_Bsplines, [i-degree, j-degree]))
+# for i in range(len(xi)):
+#     for j in range(len(yi)):
+#         if weightfunction.circle(radius,[xi[i],yi[j]]) > 0:
+#             index_inner_Bsplines = np.vstack((index_inner_Bsplines, [int(index_Bspline_x[int(i-(degree+1)/2)]),int(index_Bspline_y[int(j-(degree+1)/2)])]))
+#         else:
+#             print(i-(degree-1)/2,j)
+#         #else:
+#         #    print(int(index_Bspline_x[i]),int(index_Bspline_y[j]))
+#         #elif xi[i] >= (0-(degree-1)/2) and yi[j] >= (0-(degree-1)/2) and xi[i] <= (1+(degree-1)/2) and yi[j] <= (1+(degree-1)/2):
+#         #    index_outer_Bsplines = np.vstack((index_outer_Bsplines, [i-degree, j-degree]))
+# index_inner_Bsplines = np.delete(index_inner_Bsplines, 0, 0)
+# index_outer_Bsplines = np.delete(index_outer_Bsplines, 0, 0)
+
+    
+
+for i in index_Bspline_x:
+    for j in index_Bspline_y:
+        if weightfunction.circle(radius,[xi[i+degree], yi[j+degree]]) > 0:
+            index_inner_Bsplines = np.vstack((index_inner_Bsplines, [i,j]))
+        else:
+            index_outer_Bsplines = np.vstack((index_outer_Bsplines, [i,j]))
 index_inner_Bsplines = np.delete(index_inner_Bsplines, 0, 0)
 index_outer_Bsplines = np.delete(index_outer_Bsplines, 0, 0)
 print(index_inner_Bsplines)
 printLine()
 print(index_outer_Bsplines)
-    
 
 
+for i in index_Bspline_x:
+    for j in index_Bspline_y:
+        print(np.meshgrid(xi[i+degree], yi[j+degree])[0][1])
 
 
 
