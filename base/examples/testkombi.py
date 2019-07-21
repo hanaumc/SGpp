@@ -11,6 +11,7 @@ from scipy import special
 from mpl_toolkits import mplot3d
 from numpy import linalg as LA, transpose, full, vstack
 from matplotlib.pyplot import axis
+from _socket import AI_ALL
 
 
 def printLine():
@@ -137,189 +138,153 @@ for k in range(2**level_y+degree+1+1):
 
 
 # Index von Bspline auf Knotenfolge
-index_Bspline_x = np.arange(-(degree-1)/2, level_x**2-(degree+1)/2+1, 1)
-index_Bspline_y = np.arange(-(degree-1)/2, level_y**2-(degree+1)/2+1, 1)
-print(index_Bspline_x)
-print(xi)
+index_Bspline_x = np.arange(-(degree-1)/2, len(xi)-3*(degree+1)/2+1, 1)
+index_Bspline_y = np.arange(-(degree-1)/2, len(yi)-3*(degree+1)/2+1, 1)
+# print(index_Bspline_x)
+# print(xi)
 
 # Index (x,y) der Bsplines mit Knotenmittelpunkt im inneren des Gebiets
 index_inner_Bsplines = np.zeros(dim)
 index_outer_Bsplines = np.zeros(dim)
 
-# for i in range(len(xi)):
-#     for j in range(len(yi)):
-#         if weightfunction.circle(radius,[xi[i],yi[j]]) > 0:
-#             index_inner_Bsplines = np.vstack((index_inner_Bsplines, [int(index_Bspline_x[int(i-(degree+1)/2)]),int(index_Bspline_y[int(j-(degree+1)/2)])]))
-#         else:
-#             print(i-(degree-1)/2,j)
-#         #else:
-#         #    print(int(index_Bspline_x[i]),int(index_Bspline_y[j]))
-#         #elif xi[i] >= (0-(degree-1)/2) and yi[j] >= (0-(degree-1)/2) and xi[i] <= (1+(degree-1)/2) and yi[j] <= (1+(degree-1)/2):
-#         #    index_outer_Bsplines = np.vstack((index_outer_Bsplines, [i-degree, j-degree]))
-# index_inner_Bsplines = np.delete(index_inner_Bsplines, 0, 0)
-# index_outer_Bsplines = np.delete(index_outer_Bsplines, 0, 0)
-
-    
-
 for i in index_Bspline_x:
     for j in index_Bspline_y:
-        if weightfunction.circle(radius,[xi[i+degree], yi[j+degree]]) > 0:
+        if weightfunction.circle(radius,[xi[int(i+degree)], yi[int(j+degree)]]) > 0:
             index_inner_Bsplines = np.vstack((index_inner_Bsplines, [i,j]))
         else:
             index_outer_Bsplines = np.vstack((index_outer_Bsplines, [i,j]))
 index_inner_Bsplines = np.delete(index_inner_Bsplines, 0, 0)
 index_outer_Bsplines = np.delete(index_outer_Bsplines, 0, 0)
-print(index_inner_Bsplines)
-printLine()
+# print(index_inner_Bsplines)
+# printLine()
 print(index_outer_Bsplines)
 
+# Pruefe ob genug innere Bsplines vorhanden sind 
+if len(index_inner_Bsplines) < (degree+1)**2:
+    print('Nicht genug innere Punkte. Erhoehe Level oder Gebiet.')   
+    quit() 
 
+# Definiere Gitterpunkte als Vektor
+k=0
+gp = np.zeros((len(index_Bspline_x)*len(index_Bspline_y), dim))
 for i in index_Bspline_x:
     for j in index_Bspline_y:
-        print(np.meshgrid(xi[i+degree], yi[j+degree])[0][1])
+        gp[k] = [xi[int(i+degree)], yi[int(j+degree)]]
+        k=k+1
+#print(gp)
 
+# Unterteilung in innere und aeussere Bsplines durch Mittelpunkte der Bsplines
+k=0
+I_all = np.zeros((len(index_inner_Bsplines), dim))
+J_all = np.zeros((len(index_outer_Bsplines), dim))
+for i in index_inner_Bsplines:
+    I_all[k] = [xi[int(i[0]+degree)], yi[int(i[1]+degree)]]
+    k=k+1
+k=0
+for j in index_outer_Bsplines:
+    J_all[k] = [xi[int(j[0]+degree)], yi[int(j[1]+degree)]]
+    k=k+1
+#print(I_all)
+#print(J_all)
 
 
 a = np.meshgrid(xi,yi)
 plt.scatter(a[0],a[1])
-plt.show()
+#plt.show()
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# grid_Bsplines = np.meshgrid(xi,yi)
-# index_inner_Bspline = np.zeros((1, dim))
-# for i in range(len(xi)):
-#     for j in range(len(yi)):
-#         if weightfunction.circle(radius, [grid_Bsplines[0][j,i], grid_Bsplines[1][j,i]]) > 0:
-#             index_inner_Bspline = np.append(index_inner_Bspline, [[i-(degree+1)/2,j-(degree+1)/2]], axis = 0)
-# index_inner_Bspline = np.delete(index_inner_Bspline, 0, 0)
-# print(index_inner_Bspline) 
  
-# Definiere Gitter 
-x = np.arange(0, 1+h_x, h_x)
-y = np.arange(0, 1+h_y, h_y)
-grid = np.meshgrid(x,y)
-
-
-
-
-# Index der Gitterpunkte  
-# k=0
-# index_gp = np.zeros((len(xi)*len(yi), dim))
-# for i in range(1,len(x)+1):
-#     for j in range(1, len(x+1))
-
-
-
-# Definiere Gitterpunkte als Vektor
-k=0
-gp = np.zeros((len(x)*len(y), dim))
-for i in range(len(x)):
-    for j in range(len(y)):
-         gp[k] = [grid[0][j,i], grid[1][j,i]]
-         k=k+1
-
+# # Definiere Gitter 
+# x = np.arange(0, 1+h_x, h_x)
+# y = np.arange(0, 1+h_y, h_y)
+# grid = np.meshgrid(x,y)
 
 
 print("dimensionality:           {}".format(dim))
 print("level:                    {}".format((level_x, level_y)))
-print("number of grid points:    {}".format(len(x)*len(y)))
-
-# Index der inneren Bsplines, d.h. Knotenmittelpunkt im inneren des Gebiets
-# index_inner_Bsplines = np.zeros((dim))
-# index_outer_Bsplines = np.zeros((dim))
-
-
-# Auswerten von Gewichtsfunktion an Gitterpunkten und Unterteilung in innere und aeussere Punkte
-I_all = np.zeros((dim))
-J_all = np.zeros((dim))
-eval_grid = np.zeros((len(x),len(y)))
-for i in range(len(x)):
-    for j in range(len(y)):
-        eval_grid[i,j] = weightfunction.circle(radius, [grid[0][j,i], grid[1][j,i]])
-        if eval_grid[i,j] > 0:
-            #index_inner_Bsplines = np.vstack((index_inner_Bsplines, [i,j]))
-            I_all = np.vstack((I_all, [grid[0][j,i], grid[1][j,i]]))
-        else:
-            #index_outer_Bsplines = np.vstack((index_outer_Bsplines, [i,j]))
-            J_all = np.vstack((J_all, [grid[0][j,i], grid[1][j,i]]))
-# index_inner_Bsplines =  np.delete(index_inner_Bsplines, 0, 0)
-# index_outer_Bsplines =  np.delete(index_outer_Bsplines, 0, 0)
-I_all = np.delete(I_all, 0, 0)
-J_all = np.delete(J_all, 0, 0)
-# print(index_inner_Bsplines)
-# printLine()
-# print(index_outer_Bsplines)
-
+print("number of Bsplines:       {}".format(len(index_Bspline_x)*len(index_Bspline_y)))
 
 
 
 # Plot von inneren und aeusseren Punkten
-plt.scatter(grid[0], grid[1], c='crimson', s=50, lw=0)
+plt.scatter(J_all[:,0], J_all[:,1], c='crimson', s=50, lw=0)
 plt.scatter(I_all[:,0], I_all[:,1], c='mediumblue', s=50, lw=0)
 #plt.show()
 
 
-# Pruefe ob genug innere Punkte vorhanden sind 
-if len(I_all) < (degree+1)**2:
-    print('Nicht genug innere Punkte. Erhoehe Level oder Gebiet.')   
-    quit()         
+for i in range(0,5):
+    print(xi[int(index_outer_Bsplines[2,1]+(i+(degree-1)/2))])
 
 
-# Unterteilung der aeusseren Punkte in relevante und irrelevante Punkte
-J_relevant = np.zeros(dim)
-for j in range(len(J_all)):
-    supp_x = np.arange(J_all[j,0]-int((degree+1)/2)*h_x, J_all[j,0]+int((degree+1)/2+1)*h_x, h_x)
-    supp_y = np.arange(J_all[j,1]-int((degree+1)/2)*h_y, J_all[j,1]+int((degree+1)/2+1)*h_y, h_y)
-    grid_supp_points = np.meshgrid(supp_x, supp_y)
-    eval_supp_points = np.zeros((len(supp_x), len(supp_y)))
-    for i in range(len(supp_x)):
-        for k in range(len(supp_y)):
-            eval_supp_points[i,k] = weightfunction.circle(radius, [grid_supp_points[0][k,i], grid_supp_points[1][k,i]])
-    if (eval_supp_points > 0).any():
-        J_relevant = np.vstack((J_relevant, J_all[j]))      
-J_relevant = np.delete(J_relevant, 0, 0)
-#print(J_relevant)
-
-# Index der auesseren relevanten Punkte unter allen Punkten
-index_J_relevant = np.zeros(len(J_relevant))
-for i in range(len(J_relevant)):
-    for j in range(len(gp)):
-        if J_relevant[i, 0] == gp[j, 0] and J_relevant[i, 1] == gp[j, 1]:
-            index_J_relevant[i] = j
-#print(index_J_relevant)
+# for i in index_outer_Bsplines:
+#     for j in index_outer_Bsplines:
+#         supp_x = (xi[i[0]+(degree-1)/2])
+#        # supp_y = 
 
 
-# Plot von inneren, aeusseren und relevanten aeusseren Punkten
-plt.scatter(grid[0], grid[1], c='crimson', s=50, lw=0)
-plt.scatter(I_all[:,0], I_all[:,1], c='mediumblue', s=50, lw=0)
-plt.scatter(J_relevant[:, 0], J_relevant[:, 1], c='goldenrod', s=50, lw=0)
-#plt.show()
+# Unterteilung der aeusseren Bsplines in relevante und irrelevante Bsplines
+# index_outer_relevant_Bsplines = np.zeros((dim))
+# J_relevant = np.zeros((dim))
+# for j in range(len(J_all)):    
+#     
+#     supp_x = np.arange(J_all[j,0]-int((degree+1)/2)*h_x, J_all[j,0]+int((degree+1)/2+1)*h_x, h_x)
+#     supp_y = np.arange(J_all[j,1]-int((degree+1)/2)*h_y, J_all[j,1]+int((degree+1)/2+1)*h_y, h_y)
+#     print(supp_x)
+#     grid_supp_points = np.meshgrid(supp_x, supp_y)
+#     eval_supp_points = np.zeros((len(supp_x), len(supp_y)))
+#     for i in range(len(supp_x)):
+#         for k in range(len(supp_y)):
+#             eval_supp_points[i,k] = weightfunction.circle(radius, [grid_supp_points[0][k,i], grid_supp_points[1][k,i]])
+#     if (eval_supp_points > 0).any():
+#         J_relevant = np.vstack((J_relevant, J_all[j]))      
+# J_relevant = np.delete(J_relevant, 0, 0)
+# print(J_relevant)
+# 
+# for i in range(len(J_relevant)):
+#     print(i)
 
-# Monome definieren und an allen Gitterpunkten auswerten
-size_monomials = (degree+1)**2
-n_neighbors = size_monomials
-eval_monomials = np.zeros((size_monomials, len(gp)))
-k = 0
-for j in range(degree + 1):
-    for i in range (degree + 1):
-        eval_monomials[k] = (pow(gp[:, 0], i) * pow(gp[:, 1], j))
-        k = k + 1   
-eval_monomials = np.transpose(eval_monomials)
+
+
+# # Unterteilung der aeusseren Punkte in relevante und irrelevante Punkte
+# J_relevant = np.zeros(dim)
+# for j in range(len(J_all)):
+#     supp_x = np.arange(J_all[j,0]-int((degree+1)/2)*h_x, J_all[j,0]+int((degree+1)/2+1)*h_x, h_x)
+#     supp_y = np.arange(J_all[j,1]-int((degree+1)/2)*h_y, J_all[j,1]+int((degree+1)/2+1)*h_y, h_y)
+#     grid_supp_points = np.meshgrid(supp_x, supp_y)
+#     eval_supp_points = np.zeros((len(supp_x), len(supp_y)))
+#     for i in range(len(supp_x)):
+#         for k in range(len(supp_y)):
+#             eval_supp_points[i,k] = weightfunction.circle(radius, [grid_supp_points[0][k,i], grid_supp_points[1][k,i]])
+#     if (eval_supp_points > 0).any():
+#         J_relevant = np.vstack((J_relevant, J_all[j]))      
+# J_relevant = np.delete(J_relevant, 0, 0)
+# #print(J_relevant)
+# 
+# # Index der auesseren relevanten Punkte unter allen Punkten
+# index_J_relevant = np.zeros(len(J_relevant))
+# for i in range(len(J_relevant)):
+#     for j in range(len(gp)):
+#         if J_relevant[i, 0] == gp[j, 0] and J_relevant[i, 1] == gp[j, 1]:
+#             index_J_relevant[i] = j
+# #print(index_J_relevant)
+# 
+# 
+# # Plot von inneren, aeusseren und relevanten aeusseren Punkten
+# plt.scatter(grid[0], grid[1], c='crimson', s=50, lw=0)
+# plt.scatter(I_all[:,0], I_all[:,1], c='mediumblue', s=50, lw=0)
+# plt.scatter(J_relevant[:, 0], J_relevant[:, 1], c='goldenrod', s=50, lw=0)
+# #plt.show()
+# 
+# # Monome definieren und an allen Gitterpunkten auswerten
+# size_monomials = (degree+1)**2
+# n_neighbors = size_monomials
+# eval_monomials = np.zeros((size_monomials, len(gp)))
+# k = 0
+# for j in range(degree + 1):
+#     for i in range (degree + 1):
+#         eval_monomials[k] = (pow(gp[:, 0], i) * pow(gp[:, 1], j))
+#         k = k + 1   
+# eval_monomials = np.transpose(eval_monomials)
    
 # Aufstellen der Interpolationsmatrix A_ij = b_j(x_i)
 # A = np.zeros((len(index_Bspline_x)*len(index_Bspline_y), len(gp)))
