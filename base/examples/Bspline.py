@@ -18,7 +18,7 @@ def printLine():
 def evalBspline(n, k, xi, x):
     if n == 0:
         return 1 if xi[int(k)] <= x < xi[k+1] else 0
-    if xi[k+n] == xi[k]:
+    if xi[int(k+(n-1)/2)+n] == xi[int(k+(n-1)/2)]:
         c1 = 0
     else:
         c1 = (x-xi[int(k+(n-1)/2)])/(xi[int(k+(n-1)/2)+n]-xi[int(k+(n-1)/2)]) * evalBspline(n-1, int(k+(n-1)/2), xi, x)
