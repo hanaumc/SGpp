@@ -79,7 +79,7 @@ def NNsearch(sort, j, q):
                             NN[j,s] = [block[0][t,i], block[1][t,i]]
                             s=s+1
                 elif q == len(I_all)-1:
-                    print('Fehler: Gitter nicht fein genug. Erhoehe Level.')
+                    print('Fehler: kein (n+1)x(n+1) Block im Gebiet gefunden. Erhoehe Level.')
                     quit()
                 else:
                     NNsearch(sort, j, q+1)
@@ -87,9 +87,9 @@ def NNsearch(sort, j, q):
 
 dim = 2         # Dimension
 radius = 0.4    # Radius von Kreis
-degree = 1      # Grad von B-Splines (nur ungerade)
-level_x = 2    # Level in x Richtung    
-level_y = 2     # Level in y Richtung
+degree = 5      # Grad von B-Splines (nur ungerade)
+level_x = 4    # Level in x Richtung    
+level_y = 4     # Level in y Richtung
 
 # Pruefe ob Level hoch genug
 if level_x and level_y < np.log2(degree+1):
@@ -178,7 +178,7 @@ for i in index_Bspline_x:
     for j in index_Bspline_y:
         midpoints[k] = [xi[int(i+degree)], yi[int(j+degree)]]
         k=k+1
-print(midpoints)
+#print(midpoints)
 
 # Unterteilung in innere und aeussere Bsplines durch Mittelpunkte der Bsplines
 I_all = np.zeros((len(index_inner_Bsplines), dim))
@@ -261,7 +261,7 @@ plt.scatter(a[0],a[1])
 plt.scatter(J_all[:,0], J_all[:,1], c='crimson', s=50, lw=0)
 plt.scatter(I_all[:,0], I_all[:,1], c='mediumblue', s=50, lw=0)
 plt.scatter(J_relevant[:, 0], J_relevant[:, 1], c='goldenrod', s=50, lw=0)
-#plt.show()
+plt.show()
 
 
 
@@ -288,7 +288,7 @@ for i in range(len(x)):
     for j in range(len(y)):
          gp[k] = [grid[0][j,i], grid[1][j,i]]
          k=k+1
-print(gp)
+#print(gp)
 
 # Monome definieren und an allen Knotenmittelpunkten auswerten
 size_monomials = (degree+1)**2
@@ -310,8 +310,9 @@ for l in range(len(gp)):
         for j in index_Bspline_y:
             A[l,k] = Bspline.evalBspline(degree, i, xi, gp[l,0]) * Bspline.evalBspline(degree, j, yi, gp[l,1])
             k=k+1        
-#print(A)
+print(A)
 #print(A.shape)
+
  
  
 # Loese LGS und erhalte coeffs
@@ -425,13 +426,12 @@ for i in range(len(J_relevant)):
     plt.axis('equal')
     #plt.show()
 
-
 # Definiere Koeffizientenmatrix der aeusseren relevanten Punkte
 coeffs_J_relevant = np.zeros((len(J_relevant),1, size_monomials))
 #print(index_outer_relevant_Bsplines)
 k=0
-for i in len(x)*(index_outer_relevant_Bsplines[:,0]+(degree-1)/2)+(index_outer_relevant_Bsplines[:,1]+(degree-1)/2):
-    #print(i)
+#print(coeffs_J_relevant)
+for i in index_J_relevant: #len(x)*(index_outer_relevant_Bsplines[:,0]+(degree-1)/2)+(index_outer_relevant_Bsplines[:,1]+(degree-1)/2):
     coeffs_J_relevant[k] = coeffs[int(i)]
     k=k+1
 coeffs_J_relevant = np.transpose(coeffs_J_relevant, [0,2,1])
@@ -464,142 +464,85 @@ for i in range(coeffs_NN.shape[0]):
 error_LGS_extension = LA.norm(np.matmul(coeffs_NN, extension_coeffs)- coeffs_J_relevant)
 if error_LGS_extension > pow(10, -14):
     print('LGS extension failed. error > 10e-14')
-#print('error_LGS_extension: {}'.format(error_LGS_extension))
+print('error_LGS_extension: {}'.format(error_LGS_extension))
 
-
- 
-# # Beliebige Punkte im Gebiet
-# anzahl = 20
-# # punkte = np.zeros((anzahl, 2))
-# # counter = 0 
-# # while counter < anzahl:
-# #     z = np.random.rand(1, 2)
-# #     if weightfunction.circle(radius, z[0]) > 0:
-# #         punkte[counter] = z[0]
-# #         counter = counter + 1
+# Test ob Monominterpolation mit Extended Bsplines funktioniert:
+# Beliebige Punkte im Gebiet
+anzahl = 20
+punkte = np.zeros((anzahl, 2))
+counter = 0 
+while counter < anzahl:
+    z = np.random.rand(1, 2)
+    if weightfunction.circle(radius, z[0]) > 0:
+        punkte[counter] = z[0]
+        counter = counter + 1
+L2fehler = 0
 # punkte = np.zeros((1,2))
-# punkte[0,0] = 1./8.
-# punkte[0,1] = 7.0/8.0
-# L2fehler=0
-# for i in range(len(punkte)):
-#     a = Bspline.evalBspline(degree, 1, xi, punkte[i,0])*Bspline.evalBspline(degree, 3, yi, punkte[i,1])
-#     b = 0*Bspline.evalBspline(degree, 0, xi, punkte[i,0])*Bspline.evalBspline(degree, 2, yi, punkte[i,1])
-#     c = 2*Bspline.evalBspline(degree, 0, xi, punkte[i,0])*Bspline.evalBspline(degree, 4, yi, punkte[i,1])
-#     d = 2*Bspline.evalBspline(degree, 1, xi, punkte[i,0])*Bspline.evalBspline(degree, 4, yi, punkte[i,1])
-#     e = 2*Bspline.evalBspline(degree, 1, xi, punkte[i,0])*Bspline.evalBspline(degree, 4, yi, punkte[i,1])
-#     summe = a+b+c+d
-#     
-#     print(a)
-#     print(b)
-#     print(c)
-#     print(d)
-#     print(summe)
-#     print(punkte[i,0])
-#     
-#     #fehler = summe - 1
-#     fehler = summe - punkte[i,0]
-#     #fehler = summe - punkte[i,1]
-#     #fehler = summe - punkte[i,0]*punkte[i,1]
-#     L2fehler = L2fehler + fehler**2
-# L2fehler = np.sqrt(L2fehler) 
-# print('L2 Fehler: {}'.format(L2fehler))
+# punkte[0,0] = 3./8.
+# punkte[0,1] = 3./8.
+for p in range(len(punkte)):  
+    # Definiere J(i)
+    extended_Bspline = 0
+    c=0        
+    for i in index_I_all: 
+        J_i = np.zeros(1)
+        index_NN_relevant = np.zeros(1)
+        bi = Bspline.evalBspline(degree, index_all_Bsplines[int(i),0], xi, punkte[p,0])*Bspline.evalBspline(degree, index_all_Bsplines[int(i),1], yi, punkte[p,1])
+        for k in range(len(index_NN)): # Definiere 
+            if (i == index_NN[k]).any():
+                J_i = np.hstack((J_i, index_J_relevant[k]))
+                  
+                for l in range(index_NN.shape[1]):
+                    if i == index_NN[k,l]:
+                        index_NN_relevant = np.hstack((index_NN_relevant, l))
+                #print(index_J_relevant[j])
+        J_i = np.delete(J_i, 0)
+        index_NN_relevant = np.delete(index_NN_relevant, 0)
+        #print(J_i)
+        #print(index_NN_relevant)
+        g=0
+        inner_sum = 0
+        for j in J_i:
+            for t in range(len(index_J_relevant)):
+                if j == index_J_relevant[t]:
+                    inner_sum = inner_sum + extension_coeffs[t, int(index_NN_relevant[g])]*Bspline.evalBspline(degree, index_all_Bsplines[int(j),0], xi, punkte[p,0])*Bspline.evalBspline(degree, index_all_Bsplines[int(j),1], yi, punkte[p,1]) 
+                    #print(extension_coeffs[t])#, int(index_NN_relevant[g])])
+                    #print(extension_coeffs[t, int(index_NN_relevant[g])])
+                    #print(index_NN_relevant[g])
+                    g=g+1
+          
+        extended_Bspline = extended_Bspline + coeffs[int(index_I_all[c]),1]*( bi + inner_sum)
+        c=c+1          
+    #print(extended_Bspline)
+    #fehler = extended_Bspline -1
+    fehler = extended_Bspline - punkte[p,0]
+    #fehler = extended_Bspline - punkte[p,1]
+    #fehler = extended_Bspline - (punkte[p,0]*punkte[p,1])
+    L2fehler = L2fehler + fehler**2
+L2fehler = np.sqrt(L2fehler) 
+print('L2 Fehler: {}'.format(L2fehler))
+
+     
+
+
+# Definieren der Zielfunktion
+
+def function(x):
+    f = 0
+    f = np.sin(8* x[0]) + np.sin(7 * x[1])
+    #f = f * weightfunction.circle(radius, x)
+    return f
 
 
 
-print(index_NN)
 
 
 
 
-# Definiere J(i)        
-for i in index_I_all:
-    J_i = np.zeros(1)
-    for j in range(len(index_NN)):
-        if (i == index_NN[j]).any():
-            J_i = np.hstack((J_i, index_J_relevant[j]))
-            print(index_J_relevant[j])
-    printLine()
-J_i = np.delete(J_i, 0)
-print(J_i)    #wird fuer jedes i neu berechnet in der extension!!!
-
-print(index_outer_relevant_Bsplines)
-
-for i in range(len(J_i)):
-    print(index_all_Bsplines[int(J_i[i])])
 
 
 
-# #################### 1D Test ########################
-# 
-# gridpoints = x
-# # gridpoints = np.delete(gridpoints,0)
-# # gridpoints = np.delete(gridpoints,0)
-# # gridpoints = np.delete(gridpoints,-1)
-# # gridpoints = np.delete(gridpoints,-1)
-# print(gridpoints)
-# 
-# 
-# # 1D Monome
-# size_monomials = degree+1
-# eval_monomials = np.zeros((size_monomials, len(gridpoints)))
-# k = 0
-# for i in range (degree + 1):
-#     eval_monomials[k] = pow(gridpoints, i)
-#     k = k + 1   
-# eval_monomials = np.transpose(eval_monomials)
-# print(eval_monomials)
-# 
-# 
-# 
-# # Aufstellen der Interpolationsmatrix A_ij = b_j(x_i)
-# A = np.zeros((len(index_Bspline_x), len(gridpoints)))
-# for l in range(len(gridpoints)):
-#     k=0
-#     for i in index_Bspline_x:
-#         A[l,k] = Bspline.evalBspline(degree, i, xi, gridpoints[l])
-#         k=k+1        
-# print(A)
-# 
-# # Loese LGS und erhalte coeffs
-# coeffs = np.linalg.solve(A, eval_monomials)
-# print(coeffs)
-#  
-# # Test ob Loesen des LGS erfolgreich war
-# error = eval_monomials - np.matmul(A, coeffs)
-# error = LA.norm(error)
-# if error > pow(10, -14):
-#     print('failed. error > 10e-14')
-# 
-# # Beliebige Punkte im Gebiet
-# anzahl = 20
-# punkte = np.zeros((anzahl, 2))
-# counter = 0 
-# while counter < anzahl:
-#     z = np.random.rand(1, 2)
-#     if weightfunction.circle(radius, z[0]) > 0:
-#         punkte[counter] = z[0]
-#         counter = counter + 1
-#    
-# # Fehler zu Monomen bestimmen
-# L2fehler = 0
-# for k in range(len(punkte)):
-#     summe = 0 
-#     c = 0
-#     for i in index_Bspline_x:
-#         summe = summe + coeffs[c,0] * Bspline.evalBspline(degree, i, xi, punkte[k,0])
-#         c=c+1
-#     fehler = summe - 1                         #coeffs[c,0], Monom 1                    
-#     #fehler = summe - punkte[k,0]               #coeffs[c,1], Monom x
-#     #fehler = summe - punkte[k,0]**2
-#     #fehler = summe - punkte[k,0]**3
-#     #fehler = summe - punkte[k,0]*punkte[k,1]
-#     #fehler = summe - punkte[k,1]               #coeffs[c,2], Monom y
-#     #fehler = summe-(punkte[k,0]*punkte[k,1])    #coeffs[c,3], Monom x*y
-#     L2fehler = L2fehler + fehler**2
-# L2fehler = np.sqrt(L2fehler) 
-# print(L2fehler)
-# printLine()
 
-#########################################################################
+
 
 
