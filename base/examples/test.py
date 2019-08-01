@@ -26,7 +26,7 @@ def function(x):
 dim =  2  # Dimension
 radius = 0.3  # Radius von Kreis
 degree = 3  # Grad von B-Splines (nur ungerade)
-level = 4       # Level von Sparse Grid
+level = 9       # Level von Sparse Grid
 
 p = np.zeros((10000, 2))
 counter = 0 
