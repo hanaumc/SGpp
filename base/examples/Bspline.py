@@ -45,15 +45,17 @@ def evalBspline(n, k, xi, x):
     else:
        c2 = (1-(x -xi[int(k+(n-1)/2+1)])/(xi[int(k+(n-1)/2+n+1)] - xi[int(k+(n-1)/2+1)])) * B(n-1, k+(n-1)/2+1, xi, x)
     return c1 + c2
-# 
-# degree = 5
+
+
+ 
+# degree = 1
 # level_x = 3
-#   
+#    
 # # Gitterweite
 # h_x = 2**(-level_x)
-#   
+#    
 # #xi = np.arange(-(degree+1)/2, 1/h_x+(degree+1)/2+1, 1)*h_x*8
-#   
+#    
 # xi = np.zeros(2**level_x+degree+1+1)
 # for k in range(2**level_x+degree+1+1):
 #     if k in range(degree+1):
@@ -62,28 +64,28 @@ def evalBspline(n, k, xi, x):
 #         xi[k] = ((k+(degree-1)/2)-degree)*h_x
 #     elif k in range(2**level_x+1, 2**level_x+degree+1+1):
 #         xi[k] = ((k+degree-1)-degree)*h_x
-#   
-#   
+#    
+#    
 # print(xi) 
-#   
-#   
-#   
-# x = np.linspace(-.5, 1.5, 200)
+#    
+#    
+#    
+# # x = np.linspace(-.5, 1.5, 200)
+# # eval = np.zeros(len(x))
+# # for i in range(0,9):
+# #     for j in range(len(x)):
+# #         eval[j] = B(degree, i, xi, x[j])
+# #     plt.plot(x,eval)
+#    
+# #plt.show()
+#    
+# x = np.linspace(-.2, 1.2, 2000)
 # eval = np.zeros(len(x))
 # for i in range(0,9):
 #     for j in range(len(x)):
-#         eval[j] = B(degree, i, xi, x[j])
-#     plt.plot(x,eval)
-#   
-# plt.show()
-#   
-# x = np.linspace(-.5, 1.5, 200)
-# eval = np.zeros(len(x))
-# for i in range(-2,7):
-#     for j in range(len(x)):
 #         eval[j] = evalBspline(degree, i, xi, x[j])
 #     plt.plot(x,eval)
-#   
+#    
 # plt.show()
 # 
 # 

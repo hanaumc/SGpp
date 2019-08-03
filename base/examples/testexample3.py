@@ -23,6 +23,11 @@ def function_1(x):
     f = np.sin(8* x[0]) + np.sin(7 * x[1])
     f = f * weightfunction.circle(radius, x)
     return f
+def function_2(x):
+    f = 0
+    f = np.sin(np.pi*x[0]*x[1])
+    f = f * weightfunction.circle(radius,x)
+    return f
 
 def NNsearch(sort, j, q, I_all, h_x, h_y,NN):
     xblock = np.arange(I_all[int(sort[q,1]), 0], I_all[int(sort[q,1]), 0]+(degree+1)*h_x, h_x)
@@ -94,13 +99,13 @@ def NNsearch(sort, j, q, I_all, h_x, h_y,NN):
 
 dim = 2         # Dimension
 radius = 0.4    # Radius von Kreis
-degree = 3     # Grad von B-Splines (nur ungerade)
+degree = 5     # Grad von B-Splines (nur ungerade)
 #level_x = 2   # Level in x Richtung    
 #level_y = 2     # Level in y Richtung
  
-levelymax = 6
-for levelx in range(6,9):
-    for levely  in range(3,levelymax):
+levelymax = 8
+for levelx in range(4,8):
+    for levely  in range(4,levelymax):
         start = time.time()
         print(levelx,levely)
         level_x = levelx
@@ -226,58 +231,60 @@ for levelx in range(6,9):
         print('error_LGS_extension: {}'.format(error_LGS_extension))
            
            
-        A_WEB = np.zeros((len(I_all),len(I_all)))
-        for p in range(len(I_all)):  
-            # Definiere J(i)
-            extended_Bspline = 0
-            c=0        
-            for i in index_I_all: 
-                J_i = np.zeros(1)
-                index_NN_relevant = np.zeros(1)
-                bi = Bspline.evalBspline(degree, index_all_Bsplines[int(i),0], xi, I_all[p,0])*Bspline.evalBspline(degree, index_all_Bsplines[int(i),1], yi, I_all[p,1])
-                for k in range(len(index_NN)): # Definiere 
-                    if (i == index_NN[k]).any():
-                        J_i = np.hstack((J_i, index_J_relevant[k]))
-                               
-                        for l in range(index_NN.shape[1]):
-                            if i == index_NN[k,l]:
-                                index_NN_relevant = np.hstack((index_NN_relevant, l))
-                        #print(index_J_relevant[j])
-                J_i = np.delete(J_i, 0)
-                index_NN_relevant = np.delete(index_NN_relevant, 0)
-                #print(J_i)
-                #print(index_NN_relevant)
-                g=0
-                inner_sum = 0
-                for j in J_i:
-                    for t in range(len(index_J_relevant)):
-                        if j == index_J_relevant[t]:
-                            inner_sum = inner_sum + extension_coeffs[t, int(index_NN_relevant[g])]*Bspline.evalBspline(degree, index_all_Bsplines[int(j),0], xi, I_all[p,0])*Bspline.evalBspline(degree, index_all_Bsplines[int(j),1], yi, I_all[p,1]) 
-                            #print(extension_coeffs[t])#, int(index_NN_relevant[g])])
-                            #print(extension_coeffs[t, int(index_NN_relevant[g])])
-                            #print(index_NN_relevant[g])
-                            g=g+1
-                       
-                extended_Bspline = extended_Bspline + ( bi + inner_sum)
-                A_WEB[p,c] = weightfunction.circle(radius, I_all[p])*extended_Bspline
-                c=c+1          
-               
-        #print(A_WEB.shape)
+#         A_WEB = np.zeros((len(I_all),len(I_all)))
+#         for p in range(len(I_all)):  
+#             # Definiere J(i)
+#             extended_Bspline = 0
+#             c=0        
+#             for i in index_I_all: 
+#                 J_i = np.zeros(1)
+#                 index_NN_relevant = np.zeros(1)
+#                 bi = Bspline.evalBspline(degree, index_all_Bsplines[int(i),0], xi, I_all[p,0])*Bspline.evalBspline(degree, index_all_Bsplines[int(i),1], yi, I_all[p,1])
+#                 for k in range(len(index_NN)): # Definiere 
+#                     if (i == index_NN[k]).any():
+#                         J_i = np.hstack((J_i, index_J_relevant[k]))
+#                                 
+#                         for l in range(index_NN.shape[1]):
+#                             if i == index_NN[k,l]:
+#                                 index_NN_relevant = np.hstack((index_NN_relevant, l))
+#                         #print(index_J_relevant[j])
+#                 J_i = np.delete(J_i, 0)
+#                 index_NN_relevant = np.delete(index_NN_relevant, 0)
+#                 #print(J_i)
+#                 #print(index_NN_relevant)
+#                 g=0
+#                 inner_sum = 0
+#                 for j in J_i:
+#                     for t in range(len(index_J_relevant)):
+#                         if j == index_J_relevant[t]:
+#                             inner_sum = inner_sum + extension_coeffs[t, int(index_NN_relevant[g])]*Bspline.evalBspline(degree, index_all_Bsplines[int(j),0], xi, I_all[p,0])*Bspline.evalBspline(degree, index_all_Bsplines[int(j),1], yi, I_all[p,1]) 
+#                             #print(extension_coeffs[t])#, int(index_NN_relevant[g])])
+#                             #print(extension_coeffs[t, int(index_NN_relevant[g])])
+#                             #print(index_NN_relevant[g])
+#                             g=g+1
+#                         
+#                 extended_Bspline = extended_Bspline + ( bi + inner_sum)
+#                 A_WEB[p,c] = weightfunction.circle(radius, I_all[p])*extended_Bspline
+#                 c=c+1          
+#                 
+#         #print(A_WEB.shape)
+#             
+#         data['A_WEB'] = A_WEB
+
+        A_WEB = data['A_WEB']
            
-        data['A_WEB'] = A_WEB
-           
-        b_1 = np.zeros((len(I_all),1))
+        b_2 = np.zeros((len(I_all),1))
         for i in range(len(I_all)):
-            b_1[i] = function_1(gp[int(index_I_all[i])])
+            b_2[i] = function_2(gp[int(index_I_all[i])])
         #print(b)
            
-        data['b_1'] = b_1
+        data['b_2'] = b_2
            
-        alpha_1 = np.linalg.solve(A_WEB, b_1)
+        alpha_2 = np.linalg.solve(A_WEB, b_2)
         #print(alpha)
-        data['alpha_1'] = alpha_1
+        data['alpha_2'] = alpha_2
            
-        error_LGS_WEBspline = LA.norm(np.matmul(A_WEB, alpha_1)- b_1)
+        error_LGS_WEBspline = LA.norm(np.matmul(A_WEB, alpha_2)- b_2)
         if error_LGS_WEBspline > pow(10, -14):
             print('LGS WEBspline failed. error > 10e-14')
         print('error_LGS_WEBspline: {}'.format(error_LGS_WEBspline))
