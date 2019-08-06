@@ -36,24 +36,36 @@ for levelx in range(4,8):
         print(levelx,levely)
         level_x = levelx
         level_y = levely       
-     
+        
+        filename = 'punkte.pkl'
+        path = '/home/hanausmc/pickle/circle'
+        filepath = os.path.join(path, filename)
+               
+        with open(filepath, 'rb') as fp:
+            data = pickle.load(fp)
+        punkte = data['punkte']
+        
         filename = 'data_{}_{}_circle_degree_{}.pkl'.format(level_x, level_y, degree)
         path = '/home/hanausmc/pickle/circle'
         filepath = os.path.join(path, filename)
               
         with open(filepath, 'rb') as fp:
             data = pickle.load(fp)
+        data['punkte'] = punkte
+        print(punkte.shape)
+        print(data.keys())
         
-        eval_function_2 = np.zeros((len(data['punkte']),1))
-        for i in range(len(data['punkte'])):
-            eval_function_2[i,0] = function_2(data['punkte'][i])
-        
-        
-        data['eval_function_2'] = eval_function_2
-               
+#         eval_function_2 = np.zeros((len(data['punkte']),1))
+#         for i in range(len(data['punkte'])):
+#             eval_function_2[i,0] = function_2(data['punkte'][i])
+#         
+#         
+#         data['eval_function_2'] = eval_function_2
+#                
         with open(filepath, 'wb') as fp:
             pickle.dump(data, fp)
             #print('saved data to {}'.format(filepath))       
-        print(data.keys())
+        #print(data.keys())
+#        print(data['eval_Interpolation'].shape)
 
     levelymax=levelymax-1
