@@ -25,7 +25,7 @@ def NNsearch(sort, j, q):
     s=0
     for i in range(degree+1):
         for t in range(degree+1):
-            eval_block[s] = weightfunction.circle(radius,[block[0][t,i], block[1][t,i]])
+            eval_block[s] = weightfunction.ellipse(radius1, radius2,[block[0][t,i], block[1][t,i]])
             s=s+1
     if np.all(eval_block>0) == True:
         s=0
@@ -40,7 +40,7 @@ def NNsearch(sort, j, q):
         s=0
         for i in range(degree+1):
             for t in range(degree+1):
-                eval_block[s] = weightfunction.circle(radius,[block[0][t,i],block[1][t,i]])
+                eval_block[s] = weightfunction.ellipse(radius1, radius2,[block[0][t,i],block[1][t,i]])
                 s=s+1
         if np.all(eval_block>0) == True:
             s=0
@@ -55,7 +55,7 @@ def NNsearch(sort, j, q):
             s=0
             for i in range(degree+1):
                 for t in range(degree+1):
-                    eval_block[s] = weightfunction.circle(radius,[block[0][t,i],block[1][t,i]])
+                    eval_block[s] = weightfunction.ellipse(radius1, radius2,[block[0][t,i],block[1][t,i]])
                     s=s+1
             if np.all(eval_block>0) == True:
                 s=0
@@ -70,7 +70,7 @@ def NNsearch(sort, j, q):
                 s=0
                 for i in range(degree+1):
                     for t in range(degree+1):
-                        eval_block[s] = weightfunction.circle(radius,[block[0][t,i],block[1][t,i]])
+                        eval_block[s] = weightfunction.ellipse(radius1, radius2,[block[0][t,i],block[1][t,i]])
                         s=s+1
                 if np.all(eval_block>0) == True:
                     s=0
@@ -89,9 +89,9 @@ dim = 2         # Dimension
 radius = 0.4    # Radius von Kreis
 radius1=0.45
 radius2=0.1
-degree = 5      # Grad von B-Splines (nur ungerade)
-level_x = 7   # Level in x Richtung    
-level_y = 4     # Level in y Richtung
+degree = 1      # Grad von B-Splines (nur ungerade)
+level_x = 4   # Level in x Richtung    
+level_y = 4    # Level in y Richtung
  
 # Pruefe ob Level hoch genug
 if level_x and level_y < np.log2(degree+1):
@@ -101,7 +101,7 @@ if level_x and level_y < np.log2(degree+1):
 # Gitter fuer Kreis erzeugen und auswerten
 x0 = np.linspace(0, 1, 50)
 X = np.meshgrid(x0, x0) 
-Z = weightfunction.circle(radius, X)
+Z = weightfunction.ellipse(radius1, radius2, X)
  
 # Plot von Kreis
 plt.contour(X[0], X[1], Z, 0)
@@ -163,7 +163,7 @@ index_outer_Bsplines = np.zeros(dim)
  
 for i in index_Bspline_x:
     for j in index_Bspline_y:
-        if weightfunction.circle(radius,[xi[int(i+degree)], yi[int(j+degree)]]) > 0:
+        if weightfunction.ellipse(radius1, radius2,[xi[int(i+degree)], yi[int(j+degree)]]) > 0:
             index_inner_Bsplines = np.vstack((index_inner_Bsplines, [i,j]))
         else:
             index_outer_Bsplines = np.vstack((index_outer_Bsplines, [i,j]))
@@ -214,7 +214,7 @@ for j in range(len(index_outer_Bsplines)):
         eval_supp = np.zeros((len(supp_x), len(supp_y)))
     for h in range(len(supp_x)):
         for g in range(len(supp_y)):
-            eval_supp[h,g] = weightfunction.circle(radius, [grid_supp[0][g,h], grid_supp[1][g,h]])
+            eval_supp[h,g] = weightfunction.ellipse(radius1, radius2, [grid_supp[0][g,h], grid_supp[1][g,h]])
     if (eval_supp > 0).any():
         index_outer_relevant_Bsplines = np.vstack((index_outer_relevant_Bsplines, [index_outer_Bsplines[j]]))
 index_outer_relevant_Bsplines = np.delete(index_outer_relevant_Bsplines,0,0)
@@ -255,7 +255,7 @@ for i in range(len(J_relevant)):
   
 a = np.meshgrid(xi,yi)
 #plt.scatter(a[0],a[1])
-#plt.scatter(J_all[:,0], J_all[:,1], c='crimson', s=50, lw=0)
+plt.scatter(J_all[:,0], J_all[:,1], c='crimson', s=50, lw=0)
 plt.scatter(I_all[:,0], I_all[:,1], c='mediumblue', s=50, lw=0)
 plt.scatter(J_relevant[:, 0], J_relevant[:, 1], c='goldenrod', s=50, lw=0)
 plt.xlim(-0.2, 1.2)
@@ -299,7 +299,7 @@ n_neighbors = size_monomials
 # # counter = 0 
 # # while counter < anzahl:
 # #     z = np.random.rand(1, 2)
-# #     if weightfunction.circle(radius, z[0]) > 0:
+# #     if weightfunction.ellipse(radius1, radius2, z[0]) > 0:
 # #         punkte[counter] = z[0]
 # #         counter = counter + 1
 # #      
@@ -383,20 +383,19 @@ elif k == 1:
 #print(index_NN)
    
 # Plot der nearest neighbors 
-#-for i in range(len(J_relevant)):
-i=0
-#plt.scatter(J_all[:,0], J_all[:,1], c='crimson', s=50, lw=0)
-plt.scatter(I_all[:, 0], I_all[:, 1], c='mediumblue', s=50, lw=0)
-plt.scatter(J_relevant[:, 0], J_relevant[:, 1], c='goldenrod', s=50, lw=0)
-plt.scatter(J_relevant[i, 0], J_relevant[i, 1], c='cyan', s=50, lw=0) 
-plt.scatter(NN[i,:,0], NN[i, :, 1], c='limegreen', s=50, lw=0)
-plt.contour(X[0], X[1], Z, 0)
-plt.axis('equal')
-#plt.axis('off')
-plt.show()
+for i in range(len(J_relevant)):
+    plt.scatter(J_all[:,0], J_all[:,1], c='crimson', s=50, lw=0)
+    plt.scatter(I_all[:, 0], I_all[:, 1], c='mediumblue', s=50, lw=0)
+    plt.scatter(J_relevant[:, 0], J_relevant[:, 1], c='goldenrod', s=50, lw=0)
+    plt.scatter(J_relevant[i, 0], J_relevant[i, 1], c='cyan', s=50, lw=0) 
+    plt.scatter(NN[i,:,0], NN[i, :, 1], c='limegreen', s=50, lw=0)
+    plt.contour(X[0], X[1], Z, 0)
+    plt.axis('equal')
+    plt.axis('off')
+    plt.show()
  
 
-
+# 
 # # Monome definieren und an allen Knotenmittelpunkten auswerten
 # size_monomials = (degree+1)**2
 # n_neighbors = size_monomials
@@ -408,7 +407,7 @@ plt.show()
 #         k = k + 1   
 # eval_monomials = np.transpose(eval_monomials)
 # #print(eval_monomials)
-#   
+#    
 # # Aufstellen der Interpolationsmatrix A_ij = b_j(x_i)
 # A = np.zeros((len(index_Bspline_x)*len(index_Bspline_y), len(gp)))
 # for l in range(len(gp)):
@@ -418,10 +417,10 @@ plt.show()
 #             A[l,k] = Bspline.evalBspline(degree, i, xi, gp[l,0]) * Bspline.evalBspline(degree, j, yi, gp[l,1])
 #             k=k+1        
 # print(A)
-# #print(A.shape)
-#  
+# print(A.shape)
 #   
-#   
+#    
+#    
 # # Loese LGS und erhalte coeffs
 # coeffs = np.linalg.solve(A, eval_monomials)
 # #print(coeffs)
@@ -459,7 +458,7 @@ plt.show()
 # # if (np.linalg.det(coeffs_NN) == 0).any():
 # #     print('Waehle Nearest Neighbors anders, so dass Koeffizientenmatrix der NN nicht singulaer')
 # #     quit()
-#  
+  
  
 # extension_coeffs = np.zeros((len(J_relevant), size_monomials, 1))
 # for i in range(coeffs_NN.shape[0]):
@@ -479,7 +478,7 @@ plt.show()
 # # counter = 0 
 # # while counter < anzahl:
 # #     z = np.random.rand(1, 2)
-# #     if weightfunction.circle(radius, z[0]) > 0:
+# #     if weightfunction.ellipse(radius1, radius2, z[0]) > 0:
 # #         punkte[counter] = z[0]
 # #         counter = counter + 1
 # # L2fehler = 0
@@ -536,7 +535,7 @@ plt.show()
 # # def function(x):
 # #     f = 0
 # #     f = np.sin(8* x[0]) + np.sin(7 * x[1])
-# #     #f = f * weightfunction.circle(radius, x)
+# #     #f = f * weightfunction.ellipse(radius1, radius2, x)
 # #     return f
 # # 
 # # 

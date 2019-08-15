@@ -26,7 +26,7 @@ def function(x):
 dim =  2  # Dimension
 radius = 0.3  # Radius von Kreis
 degree = 3  # Grad von B-Splines (nur ungerade)
-level = 9       # Level von Sparse Grid
+level = 4       # Level von Sparse Grid
 
 p = np.zeros((10000, 2))
 counter = 0 
@@ -45,18 +45,18 @@ elif dim == 3:
 Z = weightfunction.circle(radius, X)
 
 # Plot von Kreis
-plt.contour(X[0], X[1], Z, 0)
-plt.axis('equal')
+#plt.contour(X[0], X[1], Z, 0)
+#plt.axis('equal')
 #plt.show()
 
 # Festlegen der Basis
 basis = pysgpp.SBsplineBase(degree)
 
 # Erzeugen von Gitter
-grid = pysgpp.Grid.createWEBsplineGrid(dim, degree)
+grid = pysgpp.Grid.createBsplineBoundaryGrid(dim, degree)
 gridStorage = grid.getStorage()
 print("dimensionality:           {}".format(gridStorage.getDimension()))
-grid.getGenerator().regular(level)
+grid.getGenerator().full(level)
 print("number of grid points:    {}".format(gridStorage.getSize()))
 
 # Vektor 'x' enthaelt Koordinaten von Gitterpunkten
@@ -75,6 +75,10 @@ for i in range(gridStorage.getSize()):
     x[i] = [gp.getStandardCoordinate(0), gp.getStandardCoordinate(1)]
     index_x[i] = i   
     eval_circle[i] = weightfunction.circle(radius, x[i])
+
+
+
+
 
 # Ueberpruefung auf innere und aeussere Punkte 
 p0 = 0
@@ -98,7 +102,7 @@ for i in range(len(eval_circle)):
 
 # Plot von inneren und aeusseren Punkten 
 plt.scatter(I_all[:, 0], I_all[:, 1], c='mediumblue', s=50, lw=0)
-plt.scatter(J_all[:, 0], J_all[:, 1], c='crimson', s=50, lw=0)
+plt.scatter(J_all[:, 0], J_all[:, 1], c='mediumblue', s=50, lw=0)
 plt.axis('equal')
 plt.show()
 
