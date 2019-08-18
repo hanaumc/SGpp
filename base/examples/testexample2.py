@@ -15,73 +15,7 @@ import time
 
 
 
-def NNsearch(sort, j, q, I_all, h_x, h_y,NN):
-    xblock = np.arange(I_all[int(sort[q,1]), 0], I_all[int(sort[q,1]), 0]+(degree+1)*h_x, h_x)
-    yblock = np.arange(I_all[int(sort[q,1]), 1], I_all[int(sort[q,1]), 1]+(degree+1)*h_y, h_y)
-    block = np.meshgrid(xblock, yblock)
-    eval_block = np.zeros(((degree+1)**2, 1))
-    s=0
-    for i in range(degree+1):
-        for t in range(degree+1):
-            eval_block[s] = weightfunction.ellipse(radius1, radius2,[block[0][t,i], block[1][t,i]])
-            s=s+1
-    if np.all(eval_block>0) == True:
-        s=0
-        for i in range(degree+1):
-            for t in range(degree+1):
-                NN[j,s] = [block[0][t,i], block[1][t,i]]
-                s=s+1
-    else:
-        xblock = np.arange(I_all[int(sort[q,1]), 0], I_all[int(sort[q,1]), 0]+(degree+1)*h_x, h_x)
-        yblock = np.arange(I_all[int(sort[q,1]), 1], I_all[int(sort[q,1]), 1]-(degree+1)*h_y, -h_y)
-        block = np.meshgrid(xblock, yblock)
-        s=0
-        for i in range(degree+1):
-            for t in range(degree+1):
-                eval_block[s] = weightfunction.ellipse(radius1, radius2,[block[0][t,i],block[1][t,i]])
-                s=s+1
-        if np.all(eval_block>0) == True:
-            s=0
-            for i in range(degree+1):
-                for t in range(degree+1):
-                    NN[j,s] = [block[0][t,i], block[1][t,i]]
-                    s=s+1
-        else:
-            xblock = np.arange(I_all[int(sort[q,1]), 0], I_all[int(sort[q,1]), 0]-(degree+1)*h_x, -h_x)
-            yblock = np.arange(I_all[int(sort[q,1]), 1], I_all[int(sort[q,1]), 1]-(degree+1)*h_y, -h_y)
-            block = np.meshgrid(xblock, yblock)
-            s=0
-            for i in range(degree+1):
-                for t in range(degree+1):
-                    eval_block[s] = weightfunction.ellipse(radius1, radius2,[block[0][t,i],block[1][t,i]])
-                    s=s+1
-            if np.all(eval_block>0) == True:
-                s=0
-                for i in range(degree+1):
-                    for t in range(degree+1):
-                        NN[j,s] = [block[0][t,i], block[1][t,i]]
-                        s=s+1
-            else:
-                xblock = np.arange(I_all[int(sort[q,1]), 0], I_all[int(sort[q,1]), 0]-(degree+1)*h_x, -h_x)
-                yblock = np.arange(I_all[int(sort[q,1]), 1], I_all[int(sort[q,1]), 1]+(degree+1)*h_y, h_y)
-                block = np.meshgrid(xblock, yblock)
-                s=0
-                for i in range(degree+1):
-                    for t in range(degree+1):
-                        eval_block[s] = weightfunction.ellipse(radius1, radius2,[block[0][t,i],block[1][t,i]])
-                        s=s+1
-                if np.all(eval_block>0) == True:
-                    s=0
-                    for i in range(degree+1):
-                        for t in range(degree+1):
-                            NN[j,s] = [block[0][t,i], block[1][t,i]]
-                            s=s+1
-                elif q == len(I_all)-1:
-                    print('Fehler: kein (n+1)x(n+1) Block im Gebiet gefunden. Erhoehe Level.')
-                    quit()
-                else:
-                    NNsearch(sort, j, q+1, I_all, h_x, h_y,NN)
-    return NN
+
 
 dim = 2         # Dimension
 radius = 0.4
@@ -417,7 +351,7 @@ for levelx in range(4,8):
 #                  
 #                              
 #         elif k == 1:
-#             # Nearest Neighbors mit naehestem (n+1)x(n+1) Block
+#             # Nearest Neighbors mit naehestem (n+1)x(n+1) Array
 #             distance = np.zeros((len(I_all), dim))
 #             NN = np.zeros((len(J_relevant), n_neighbors, dim))
 #             for j in range(len(J_relevant)):

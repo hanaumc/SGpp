@@ -6,8 +6,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 
 
-# x wird Spaltenvektor mit eintraegen von Punkt 1 in Zeile 1, Punkt 2 in Zeile 2, usw...
-
+# Gewichtsfunktion eines Kreises
 def circle(radius, x):
     w = radius**2
     for i in range(len(x)):
